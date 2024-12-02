@@ -112,12 +112,19 @@ def make_required_changes(release_info_dir, origin, destination):
     ignores = release_info.get_ignores(from_repository, to_repository, release_info_dir)
     for ignore in ignores:
         ignore_this = f"{destination}/{ignore}"
-        if os.path.isdir(ignore_this):
-            print(f"Ignore/delete directory {ignore_this}")
-            shutil.rmtree(ignore_this)
-        else:
-            print(f"Ignore/delete file {ignore_this}")
-            os.remove(ignore_this)
+        try:
+            if os.path.isdir(ignore_this):
+                print(f"Ignore/delete directory {ignore_this}")
+                shutil.rmtree(ignore_this)
+            else:
+                print(f"Ignore/delete file {ignore_this}")
+                os.remove(ignore_this)
+        except FileNotFoundError as e:
+            print(
+                f"[INFO] path {ignore_this} is explicitly ignored but was not found when syncing {from_repository} to {to_repository}."
+                + "This file can be removed from the ignore section of release_info.json"
+            )
+            continue
 
 
 def main():
