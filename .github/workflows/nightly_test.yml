@@ -2,45 +2,33 @@ name: Run Nightly Test
 
 on:
   schedule:
-    - cron: '30 3 * * *'  
+    - cron: '30 3 * * *'
 
 jobs:
   nightly-test:
     name: Nightly Test
     if: github.repository == 'openshift-helm-charts/development'
+    uses: ./.github/workflows/behave.yml
+    with:
+      tags: full
+      behave-logging-level: INFO
+      pr-body: |
+        Test triggered by nightly run.
+        
+        ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      checkout-fetch-depth: 0
+    secrets:
+      bot-name: ${{ secrets.BOT_NAME }}
+      bot-token: ${{ secrets.BOT_TOKEN }}
+  communicate-outcome:
+    if: always()
+    name: Communicate Outcome
+    needs: [nightly-test]
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.BOT_TOKEN }}
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: ./.github/actions/setup-python
-
-      - name: Set up Python 3.x Part 2
-        run: |
-          # set up python requirements and scripts
-          python3 -m venv ve1
-          cd scripts
-          ../ve1/bin/pip3 install -r requirements.txt
-          ../ve1/bin/pip3 install .
-          cd ..
-
-      - name: Run All Tests
-        id: run_all_tests
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BOT_NAME: ${{ secrets.BOT_NAME }}
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          PR_BODY: "Test triggered by nightly run."
-        run: |
-          ve1/bin/behave tests/functional/behave_features/ --tags=full --logging-level=WARNING --no-capture --no-color
-
       - name: Send message to helm_dev slack channel
         id: notify_to_dev
-        if: ${{ always() && steps.run_all_tests.conclusion != 'success' }}
+        if: needs.nightly-test.result != 'success'
         uses: archive/github-actions-slack@v2.8.0
         with:
           slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
@@ -48,12 +36,12 @@ jobs:
           slack-text: Failure! Nightly test for certification flow. See '${{github.server_url}}/${{github.repository}}/actions/runs/${{github.run_id}}'
       
       - name: Result from "Send Message to helm_dev slack channel"
-        if: ${{ always() && steps.run_all_tests.conclusion != 'success' }}
+        if: needs.nightly-test.result != 'success'
         run: echo "The result was ${{ steps.notify_to_dev.outputs.slack-result }}"
       
       - name: Send message to helm_notify slack channel
         id: notify
-        if: ${{ always() && steps.run_all_tests.conclusion == 'success' }}
+        if: needs.nightly-test.result == 'success'
         uses: archive/github-actions-slack@v2.8.0
         with:
           slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
@@ -61,5 +49,5 @@ jobs:
           slack-text: Success! Nightly test for certification flow. See '${{github.server_url}}/${{github.repository}}/actions/runs/${{github.run_id}}'
       
       - name: Result from "Send Message to helm_notify slack channel"
-        if: ${{ always() && steps.run_all_tests.conclusion == 'success' }}
+        if: needs.nightly-test.result == 'success'
         run: echo "The result was ${{ steps.notify.outputs.slack-result }}"
