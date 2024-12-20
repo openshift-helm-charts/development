@@ -5,6 +5,7 @@ import os
 import logging
 import git
 
+from dataclasses import dataclass, field
 from tempfile import TemporaryDirectory
 
 import common.utils.github as github
@@ -14,15 +15,16 @@ class RepoManagementError(Exception):
     pass
 
 
+@dataclass
 class WorkflowRepoManager:
     # Keep a log of things created so we can clean them up.
-    __local_branches_created: [str] = []
-    __local_worktrees_created: [TemporaryDirectory] = []
+    __local_branches_created: list[str] = field(default_factory=list)
+    __local_worktrees_created: list[TemporaryDirectory] = field(default_factory=list)
     # (remote, branch), e.g. ('openshift-helm-charts/charts, 'my-pr-branch')
-    __remote_branches_created: [(str, str)] = []
+    __remote_branches_created: list[(str, str)] = field(default_factory=list)
 
     # The token to use for GitHub API operations.
-    __authtoken: str = ""
+    __authtoken: str = None
 
     # The branch at repo initialization. On Cleanup, we return to this branch
     # before we remove locally generated branches.
@@ -34,8 +36,8 @@ class WorkflowRepoManager:
     # The repository at working directory.
     repo: git.Repo = None
 
-    def __init__(self):
-        logging.debug(f"{self} --> __init__ called!")
+    def __post_init__(self):
+        logging.debug(f"{self} --> __post_init__ called!")
 
         try:
             self.repo = git.Repo()
@@ -94,6 +96,7 @@ class WorkflowRepoManager:
             self.repo.git.checkout("-b", branch_name)
         except (git.GitCommandError, ValueError) as e:
             raise RepoManagementError("Unable to create branch") from e
+        logging.debug(f'Adding {branch_name} to local_branches_created')
         self.__local_branches_created.append(branch_name)
 
     def add_worktree(self) -> TemporaryDirectory:
