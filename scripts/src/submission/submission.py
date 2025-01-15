@@ -188,7 +188,7 @@ class Report:
 @dataclass
 class Source:
     found: bool = False
-    path: str = None  # Path to the Chart.yaml
+    path: str = None
 
 
 @dataclass
@@ -334,7 +334,7 @@ class Submission:
         """
         if os.path.basename(file_path) == "Chart.yaml":
             self.source.found = True
-            self.source.path = file_path
+            self.source.path = os.path.dirname(file_path)
 
     def set_tarball(self, file_path: str, tarball_match: re.Match[str]):
         """Action to take when a file related to the tarball is found.
