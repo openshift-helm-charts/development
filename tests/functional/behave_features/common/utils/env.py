@@ -7,7 +7,7 @@ from common.utils.setttings import *
 
 def get_bot_name_and_token():
     bot_name = os.environ.get("BOT_NAME")
-    logging.debug(f"Enviroment variable value BOT_NAME: {bot_name}")
+    logging.warning(f"Enviroment variable value BOT_NAME: {bot_name}")
     bot_token = os.environ.get("BOT_TOKEN")
     if not bot_name and not bot_token:
         bot_name = "github-actions[bot]"

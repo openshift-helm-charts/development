@@ -1,0 +1,9 @@
+chart:
+  name: kyverno
+  shortDescription: Test Project
+publicPgpKey: null
+users:
+- githubUsername: mgoerens
+vendor:
+  label: mgoerens
+  name: mgoerens

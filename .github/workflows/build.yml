@@ -361,6 +361,7 @@ jobs:
           WORKFLOW_WORKING_DIRECTORY: "../pr"
           OCP_VERSION_RANGE: ${{ steps.get-ocp-range.outputs.ocp-version-range }}
         run: |
+          env | grep -i BOT
           cd pr-branch
           ../ve1/bin/chart-pr-review \
             --directory=../pr \
