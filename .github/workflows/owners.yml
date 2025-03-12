@@ -19,15 +19,6 @@ jobs:
       - name: Set up Python
         uses: ./.github/actions/setup-python
 
-      - name: Set up Python 3.x Part 2
-        run: |
-          # set up python
-          python3 -m venv ve1
-          cd scripts
-          ../ve1/bin/pip3 install -r requirements.txt
-          ../ve1/bin/pip3 install .
-          cd ..
-
       - uses: jitterbit/get-changed-files@v1
         id: filesChangedOrModified
         with:

@@ -44,17 +44,8 @@ jobs:
 
       - name: Set up Python
         uses: ./.github/actions/setup-python
-
-      - name: Set up Python scripts in pr-branch
-        working-directory: ./pr-branch
-        run: |
-          # set up python scripts
-          echo "set up python script in $PWD"
-          python3 -m venv ve1
-          cd scripts
-          ../ve1/bin/pip3 install -r requirements.txt
-          ../ve1/bin/pip3 install .
-          cd ..
+        with:
+          working-directory: ./pr-branch
 
       - name: Check if dev repo is targetted, only release file is in PR and user is authorized
         id: check_only_version_in_PR_and_authorized
@@ -174,18 +165,8 @@ jobs:
           token: ${{ secrets.BOT_TOKEN }}
           path: "stage-repo"
 
-      - name: Set up Python 3.x Part 1
+      - name: Set up Python
         uses: ./.github/actions/setup-python
-
-      - name: Set up CI scripts
-        run: |
-          # set up python scripts
-          echo "set up python script in $PWD"
-          python3 -m venv ve1
-          cd scripts
-          ../ve1/bin/pip3 install -r requirements.txt
-          ../ve1/bin/pip3 install .
-          cd ..
 
       - name: Check if version updated
         id: check_version_updated
@@ -283,16 +264,6 @@ jobs:
 
     - name: Set up Python
       uses: ./.github/actions/setup-python
-
-    - name: Set up CI scripts
-      run: |
-        # set up python scripts
-        echo "set up python script in $PWD"
-        python3 -m venv ve1
-        cd scripts
-        ../ve1/bin/pip3 install -r requirements.txt
-        ../ve1/bin/pip3 install .
-        cd ..
 
     - name: Approve PR
       id: approve_pr

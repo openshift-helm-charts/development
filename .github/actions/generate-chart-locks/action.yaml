@@ -60,6 +60,8 @@ runs:
       path: temp-gen-chart-lock-repo
   - name: Set up Python
     uses: ./.github/actions/setup-python
+    with:
+      skip-venv-install: true
   - name: Generate lock file JSON from existing charts
     working-directory: temp-gen-chart-lock-repo
     id: generate-chart-locks

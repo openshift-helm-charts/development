@@ -45,16 +45,6 @@ jobs:
       - name: Set up Python
         uses: ./.github/actions/setup-python
       
-      - name: Install CI Scripts
-        run: |
-          # set up python scripts
-          echo "set up python script in $PWD"
-          python3 -m venv ve1
-          cd scripts
-          ../ve1/bin/pip3 install -r requirements.txt
-          ../ve1/bin/pip3 install .
-          cd ..
-      
       - name: Check contributor
         # The return code from this script is what's important in this workflow.
         id: check-contributor

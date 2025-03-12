@@ -5,9 +5,45 @@ description: |
 
   Serves as the single place to update python versions over time across the
   project.
+inputs:
+  skip-venv-install:
+    description: Wether to install the CI scripts as part of this action.
+    default: 'false'
+    required: false
+  working-directory:
+    description: Basedir in which to save / restore cache and install venv.
+    default: './'
+    required: false
 runs:
   using: composite
   steps:
   - uses: actions/setup-python@v5
+    id: setup-python
     with:
       python-version: '3.10'
+
+  - name: Attempt to restore cached virtualenv
+    id: cache
+    if: inputs.skip-venv-install == 'false'
+    uses: actions/cache/restore@v4
+    with:
+      key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('scripts/requirements.txt') }}
+      path: ${{ inputs.working-directory }}/ve1
+
+  - name: Setup venv on cache-miss
+    if: inputs.skip-venv-install == 'false' && steps.cache.outputs.cache-hit != 'true'
+    shell: bash
+    working-directory: ${{ inputs.working-directory }}
+    run: |
+      # set up python
+      python3 -m venv ve1
+      cd scripts
+      ../ve1/bin/pip3 install -r requirements.txt
+      ../ve1/bin/pip3 install .
+
+  - name: Cache virtualenv on cache-miss
+    if: inputs.skip-venv-install == 'false' && steps.cache.outputs.cache-hit != 'true'
+    uses: actions/cache/save@v4
+    with:
+      key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('scripts/requirements.txt') }}
+      path: ${{ inputs.working-directory }}/ve1
