@@ -7,9 +7,10 @@ on:
 env:
   # Path to the submission artifact.
   # This artifact is created in the 'validate-submission' job. It contains a JSON representation of
-  # the Submision object. It can be read by other jobs to access those information rather than
+  # the Submission object. It can be read by other jobs to access those information rather than
   # fetch them from the GitHub API a second time.
-  SUBMISSION_PATH: "submission.json"
+  SUBMISSION_PATH: "${{ github.workspace }}/submission.json"
+  SUBMISSION_ARTIFACT_NAME: submission
 
 jobs:
   setup:
@@ -159,7 +160,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: ${{ always() && steps.validate-submission.outputs.submission_file_present == 'true' }}
         with:
-          name: submission
+          name: ${{ env.SUBMISSION_ARTIFACT_NAME }}
           path: ${{ env.SUBMISSION_PATH }}
 
       - name: Add 'content-ok' label
@@ -231,7 +232,7 @@ jobs:
       - name: Download submission information
         uses: actions/download-artifact@v4
         with:
-          name: submission
+          name: ${{ env.SUBMISSION_ARTIFACT_NAME }}
 
       - name: Remove 'authorized-request' label from PR
         uses: actions/github-script@v7
@@ -262,7 +263,7 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
         working-directory: ./pr-branch
         run: |
-          ../ve1/bin/get-verify-params --directory=pr --api-url=${{ github.event.pull_request._links.self.href }}
+          ../ve1/bin/get-verify-params --directory=pr
 
       - name: Install oc
         id: install-oc
@@ -427,7 +428,7 @@ jobs:
       - name: Download submission information
         uses: actions/download-artifact@v4
         with:
-          name: submission
+          name: ${{ env.SUBMISSION_ARTIFACT_NAME }}
 
       # Chart report errors are only present if an error has occured during the chart_report
       - name: Download chart_report errors
