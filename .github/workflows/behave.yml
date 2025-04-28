@@ -116,17 +116,13 @@ jobs:
           fetch-depth: ${{ inputs.checkout-fetch-depth }}
 
       - name: Set up Python
+        id: setup-python
         uses: ./.github/actions/setup-python
 
-      - name: Set up CI scripts
-        run: |
-          # set up python scripts
-          echo "set up python script in $PWD"
-          python3 -m venv ve1
-          cd scripts
-          ../ve1/bin/pip3 install -r requirements.txt
-          ../ve1/bin/pip3 install .
-          cd ..
+      - name: Install CI scripts
+        uses: ./.github/actions/install-ci-scripts
+        with:
+          python-version: ${{ steps.setup-python.outputs.python-version }}
 
         # Pull request numbers are included in generated chart names in E2E, so it's included
         # as an environment variable which E2E consumes.
