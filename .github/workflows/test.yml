@@ -82,7 +82,7 @@ jobs:
           PR_BASE_REPO: ${{ github.event.pull_request.base.repo.full_name }}
           PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
         run: |
-          ./ve1/bin/release-checker
+          ./ve1/bin/release-checker \
             --api-url="${PR_API_URL}" \
             --sender="${SENDER}" \
             --pr_branch="${PR_BRANCH}" \
