@@ -31,8 +31,10 @@ jobs:
       - run: |
           echo "[DEBUG] GITHUB_REF value is ${GITHUB_REF}"
           echo "[DEBUG] github.ref value is ${CONTEXT_REF}"
+          echo "[DEBUG] github.event.pull_request.base.ref is ${EVENT_BASE_REF}"
         env:
           CONTEXT_REF: ${{ github.ref }}
+          EVENT_BASE_REF: ${{ github.event.pull_request.base.ref }}
 
       - name: Checkout
         uses: actions/checkout@v4
