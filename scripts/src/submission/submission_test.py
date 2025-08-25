@@ -178,6 +178,12 @@ scenarios_submission_init = [
         ],
         expected_submission=submission.Submission(
             api_url="https://api.github.com/repos/openshift-helm-charts/charts/pulls/6",
+            chart=submission.Chart(
+                category=expected_chart.category,
+                organization=expected_chart.organization,
+                name=expected_chart.name,
+                # OWNERS submissions do not contain version information.
+            ),
             modified_files=[
                 f"charts/{expected_category}/{expected_organization}/{expected_name}/OWNERS"
             ],

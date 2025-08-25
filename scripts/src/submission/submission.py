@@ -324,6 +324,8 @@ class Submission:
                 self.chart.register_chart_info(category, organization, name, version)
                 self.set_tarball(file_path, match)
             elif file_category == "owners":
+                category, organization, name = match.groups()
+                self.chart.register_chart_info(category, organization, name)
                 self.modified_owners.append(file_path)
             elif file_category == "unknown":
                 self.modified_unknown.append(file_path)
