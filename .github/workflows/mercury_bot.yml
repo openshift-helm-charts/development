@@ -40,7 +40,7 @@ jobs:
           PR_API_URL: ${{ github.event.pull_request._links.self.href }}
         run: |
           ./ve1/bin/check-for-owners --api-url="${PR_API_URL}" \
-            --allowed-category partner
+            --allowed-category partners
 
       # We know that only one file was modified at this point, and it seems
       # mergeable. Determine if that file was created or modified here.
