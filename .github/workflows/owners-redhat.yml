@@ -55,7 +55,7 @@ jobs:
         working-directory: scripts
         run: |
           make venv.tools
-      
+
       - name: Gather Metadata
         id: gather-metadata
         env:
