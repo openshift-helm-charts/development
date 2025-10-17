@@ -34,13 +34,11 @@ def main():
     # Fail early if there isn't exactly one modified file
     if not s.modified_files:
         print("The PR doesn't contain any files")
-        gitutils.add_output("merge_pr", "false")
         gitutils.add_output("msg", "ERROR: PR doesn't contain any files")
         sys.exit(10)
 
     if len(s.modified_files) > 1:
         print("The PR contains multiple files.")
-        gitutils.add_output("merge_pr", "false")
         gitutils.add_output("msg", "ERROR: PR contains multiple files.")
         sys.exit(20)
 
@@ -53,17 +51,19 @@ def main():
 
     if len(s.modified_owners) == 1 and s.chart.category in args.categories:
         print("An OWNERS file has been modified or added")
-        gitutils.add_output("merge_pr", "true")
     else:
         print(
             f"The file in the PR is not a {'/'.join(x for x in args.categories)} OWNERS file"
         )
-        gitutils.add_output("merge_pr", "false")
         gitutils.add_output(
             "msg",
             f"ERROR: PR does not include a {'/'.join(x for x in args.categories)} OWNERS file.",
         )
         sys.exit(30)
+
+    gitutils.add_output("category", s.chart.category)
+    gitutils.add_output("organization", s.chart.organization)
+    gitutils.add_output("chart-name", s.chart.name)
 
 
 if __name__ == "__main__":
