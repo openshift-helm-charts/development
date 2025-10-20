@@ -25,6 +25,8 @@ jobs:
     name: Communicate Outcome
     needs: [nightly-test]
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     steps:
       - name: Send message to helm_dev slack channel
         id: notify_to_dev

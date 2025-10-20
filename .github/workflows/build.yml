@@ -26,6 +26,8 @@ jobs:
   setup:
     name: Setup CI
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     outputs:
       run_build: ${{ steps.check_build_required.outputs.run-build }}
       verifier-action-image: ${{ steps.set-env.outputs.verifier-action-image }}
@@ -130,6 +132,9 @@ jobs:
   validate-submission:
     name: Extract and validate PR content
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: write
     needs: [setup]
 
     outputs:
@@ -225,6 +230,9 @@ jobs:
   chart-verifier:
     name: Run chart-verifier
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: write
     needs: [setup, validate-submission]
 
     outputs:
@@ -443,6 +451,9 @@ jobs:
   manage-gh-pr:
     name: Comment and merge PR
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: write
     needs: [setup, validate-submission, chart-verifier]
 
     outputs:
@@ -591,6 +602,9 @@ jobs:
   release:
     name: Release Chart
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
     needs: [setup, validate-submission, chart-verifier, manage-gh-pr]
 
     steps:

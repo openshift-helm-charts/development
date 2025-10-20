@@ -70,6 +70,8 @@ on:
 jobs:
   get-features:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       features: ${{ steps.find-features.outputs.features }}
     steps:
@@ -100,6 +102,8 @@ jobs:
           echo "features=${features}" | tee -a $GITHUB_OUTPUT
   run-tests:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     needs: [get-features]
     strategy:
       fail-fast: false
