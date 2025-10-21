@@ -13,6 +13,8 @@ jobs:
   check-contributor:
     name: Check contributor
     uses: ./.github/workflows/check-contributor.yml
+    permissions:
+      contents: read
     with:
       user: ${{ github.event.pull_request.user.login }}
 
@@ -120,6 +122,8 @@ jobs:
     if: |
       needs.determine-workflow-conditions.outputs.run-tests == 'true'
     uses: ./.github/workflows/behave.yml
+    permissions:
+      contents: read
     with:
       # Default tags to 'full' if test-tags is unset for any reason by the time
       # we get here.

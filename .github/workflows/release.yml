@@ -8,6 +8,8 @@ jobs:
   check-contributor:
     name: Check contributor
     uses: ./.github/workflows/check-contributor.yml
+    permissions:
+      contents: read
     with:
       user: ${{ github.event.pull_request.user.login }}
       fail-workflow-if-not: true
@@ -129,6 +131,8 @@ jobs:
     if: |
       needs.determine-workflow-conditions.outputs.create-pull-requests == 'true'
     uses: ./.github/workflows/behave.yml
+    permissions:
+      contents: read
     with:
       tags: full
       behave-logging-level: WARNING
