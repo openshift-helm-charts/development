@@ -50,7 +50,7 @@ class ReleaseTagError(SubmissionError):
     pass
 
 
-class ChartError(Exception):
+class ChartError(SubmissionError):
     pass
 
 
@@ -238,7 +238,7 @@ class Submission:
     def __post_init__(self):
         """Complete the initialization of the Submission object.
 
-        Only retrieve PR information from the GitHub API if requiered, by checking for the presence
+        Only retrieve PR information from the GitHub API if required, by checking for the presence
         of a value for the modified_files attributes. This check allows to make the distinction
         between the two aforementioned cases of initialization of a Submission object:
         * If modified_files is not set, we're in the case of initializing a brand new Submission
