@@ -16,6 +16,8 @@ jobs:
     name: Determine workflow conditions
     needs: [check-contributor]
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     if: |
       github.event.pull_request.draft == false &&
       needs.check-contributor.outputs.is-repo-owner == 'true'
@@ -152,6 +154,8 @@ jobs:
       - test-e2e
     if: needs.determine-workflow-conditions.outputs.create-pull-requests == 'true'
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     steps:
       - name: Checkout base repo
         uses: actions/checkout@v4
@@ -231,6 +235,8 @@ jobs:
       release-tag: ${{ steps.check_merge_and_release.outputs.release_tag }}
       release-body: ${{ steps.check_merge_and_release.outputs.release_body }}
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     # cancelled() required because jobs this workflow depends on can skip.
     if: |
       !cancelled() &&
@@ -283,6 +289,9 @@ jobs:
     name: Approve, merge, release
     needs: [determine-merge-and-release-conditions]
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
     # cancelled() required because jobs this workflow depends on can skip.
     if: |
       !cancelled() &&
