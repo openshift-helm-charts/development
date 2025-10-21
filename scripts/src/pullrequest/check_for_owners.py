@@ -65,6 +65,10 @@ def main():
         )
         sys.exit(30)
 
+    gitutils.add_output("category", s.chart.category)
+    gitutils.add_output("organization", s.chart.organization)
+    gitutils.add_output("chart-name", s.chart.name)
+
 
 if __name__ == "__main__":
     main()
