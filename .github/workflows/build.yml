@@ -554,6 +554,15 @@ jobs:
               body: comment
             });
 
+      - name: Send message to helm_dev slack channel
+        id: notify_to_dev
+        if: github.repository == 'openshift-helm-charts/charts' && steps.pr_comment.outputs.ping_helm_dev == 'true'
+        uses: archive/github-actions-slack@v2.8.0
+        with:
+          slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
+          slack-channel: C02979BDUPL
+          slack-text: PR needs maintainer review ${{ github.server_url }}/${{ github.repository }}/pull/${{ github.event.number }}
+
       # The steps running chart-verifier may be skipped in some valid case, for instance if the user
       # provided a valid report.yaml
       - name: Add 'authorized-request' label to PR
