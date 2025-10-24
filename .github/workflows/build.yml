@@ -42,15 +42,6 @@ jobs:
       (github.event.action != 'labeled' || github.event.label.name == 'force-publish') &&
       github.actor != 'redhat-mercury-bot'
     steps:
-      # TODO: Removing interpolated github.ref and replacing with variable
-      # as this task is here for debugging purposes that are ongoing.
-      - run: |
-          echo "[DEBUG] GITHUB_REF value is ${GITHUB_REF}"
-          echo "[DEBUG] github.ref value is ${CONTEXT_GITHUB_REF}"
-          echo "[DEBUG] RESOLVED_GITHUB_REF is ${RESOLVED_GITHUB_REF}"
-        env:
-          CONTEXT_GITHUB_REF: ${{ github.ref }}
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -151,15 +142,6 @@ jobs:
       vendor_type: ${{ steps.validate-submission.outputs.vendor_type }}
 
     steps:
-      # TODO: Removing interpolated github.ref and replacing with variable
-      # as this task is here for debugging purposes that are ongoing.
-      - run: |
-          echo "[DEBUG] GITHUB_REF value is ${GITHUB_REF}"
-          echo "[DEBUG] github.ref value is ${CONTEXT_GITHUB_REF}"
-          echo "[DEBUG] RESOLVED_GITHUB_REF is ${RESOLVED_GITHUB_REF}"
-        env:
-          CONTEXT_GITHUB_REF: ${{ github.ref }}
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -251,15 +233,6 @@ jobs:
       ocp-version-range: ${{ steps.get-ocp-range.outputs.ocp-version-range }}
 
     steps:
-      # TODO: Removing interpolated github.ref and replacing with variable
-      # as this task is here for debugging purposes that are ongoing.
-      - run: |
-          echo "[DEBUG] GITHUB_REF value is ${GITHUB_REF}"
-          echo "[DEBUG] github.ref value is ${CONTEXT_GITHUB_REF}"
-          echo "[DEBUG] RESOLVED_GITHUB_REF is ${RESOLVED_GITHUB_REF}"
-        env:
-          CONTEXT_GITHUB_REF: ${{ github.ref }}
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -468,15 +441,6 @@ jobs:
     if: ${{ always() && needs.setup.result == 'success' }}
 
     steps:
-      # TODO: Removing interpolated github.ref and replacing with variable
-      # as this task is here for debugging purposes that are ongoing.
-      - run: |
-          echo "[DEBUG] GITHUB_REF value is ${GITHUB_REF}"
-          echo "[DEBUG] github.ref value is ${CONTEXT_GITHUB_REF}"
-          echo "[DEBUG] RESOLVED_GITHUB_REF is ${RESOLVED_GITHUB_REF}"
-        env:
-          CONTEXT_GITHUB_REF: ${{ github.ref }}
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -621,13 +585,6 @@ jobs:
     needs: [setup, validate-submission, chart-verifier, manage-gh-pr]
 
     steps:
-      - run: |
-          echo "[DEBUG] GITHUB_REF value is ${GITHUB_REF}"
-          echo "[DEBUG] github.ref value is ${CONTEXT_GITHUB_REF}"
-          echo "[DEBUG] RESOLVED_GITHUB_REF is ${RESOLVED_GITHUB_REF}"
-        env:
-          CONTEXT_GITHUB_REF: ${{ github.ref }}
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -706,7 +663,6 @@ jobs:
           CHART_ENTRY_NAME: ${{ needs.validate-submission.outputs.chart_entry_name }}
           WEB_CATALOG_ONLY: ${{ needs.validate-submission.outputs.web_catalog_only }}
           RELEASE_TAG: ${{ needs.validate-submission.outputs.release_tag }}
-          CONTEXT_GITHUB_REF: ${{ github.ref }} # for debugging
           GITHUB_REPOSITORY: ${{ github.repository }}
           PREPARED_CHART_ENTRY: ${{ steps.prepare-chart-release.outputs.chart_entry }}
           PREPARED_CHART_URL: ${{ steps.prepare-chart-release.outputs.chart_url }}
@@ -714,10 +670,6 @@ jobs:
           GITHUB_EVENT_NUMBER: ${{ github.event.number }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "[DEBUG] GITHUB_REF value is ${GITHUB_REF}"
-          echo "[DEBUG] github.ref value is ${CONTEXT_GITHUB_REF}"
-          echo "[DEBUG] RESOLVED_GITHUB_REF is ${RESOLVED_GITHUB_REF}"
-
           INDEX_BRANCH=$(if [ "${RESOLVED_GITHUB_REF}" = "refs/heads/main" ]; then echo "gh-pages"; else echo "${RESOLVED_GITHUB_REF##*/}-gh-pages"; fi)
 
           echo "[INFO] Creating Git worktree for index branch"
