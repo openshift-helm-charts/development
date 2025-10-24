@@ -1,5 +1,6 @@
 import os
 import re
+import tarfile
 import requests
 import semver
 import yaml
@@ -51,6 +52,10 @@ class ReleaseTagError(SubmissionError):
 
 
 class ChartError(SubmissionError):
+    pass
+
+
+class TarballContentError(SubmissionError):
     pass
 
 
@@ -288,7 +293,7 @@ class Submission:
                     if "filename" in file:
                         self.modified_files.append(file["filename"])
 
-    def parse_modified_files(self):
+    def parse_modified_files(self, repo_path: str = ""):
         """Classify the list of modified files.
 
         Modified files are categorized into 5 groups, mapping to 5 class attributes:
@@ -301,10 +306,15 @@ class Submission:
         - A list of added / modified OWNERS files is recorded in the `modified_owners` attribute.
         - The rest of the files are classified in the `modified_unknown` attribute.
 
+        Args:
+            repo_path (str): Local directory where the repo is checked out
+
         Raises a SubmissionError if:
+        * The PR doesn't contain any files
         * The Submission concerns more than one chart
         * The version of the chart is not SemVer compatible
         * The tarball file is named incorrectly
+        * The tarball content is incorrect
 
         """
         if not self.modified_files:
@@ -322,7 +332,7 @@ class Submission:
             elif file_category == "tarball":
                 category, organization, name, version, _ = match.groups()
                 self.chart.register_chart_info(category, organization, name, version)
-                self.set_tarball(file_path, match)
+                self.set_tarball(file_path, match, repo_path)
             elif file_category == "owners":
                 category, organization, name = match.groups()
                 self.chart.register_chart_info(category, organization, name)
@@ -356,10 +366,21 @@ class Submission:
             self.source.found = True
             self.source.path = os.path.dirname(file_path)
 
-    def set_tarball(self, file_path: str, tarball_match: re.Match[str]):
+    def set_tarball(
+        self, file_path: str, tarball_match: re.Match[str], repo_path: str = ""
+    ):
         """Action to take when a file related to the tarball is found.
 
         This can either be the .tgz tarball itself, or the .prov provenance key.
+
+        Args:
+            file_path (str): File that has been potentially detected as the tarball or the provenance file.
+            tarball_match (re.Match[str]): Matching regex, used to get the chart name and version and the tarball name.
+            repo_path (str): Local directory where the repo is checked out
+
+        Raises:
+            SubmissionError: If the tarball is incorrectly named
+            TarballContentError: If an error is found when checking the tarball content
 
         """
         _, file_extension = os.path.splitext(file_path)
@@ -373,6 +394,10 @@ class Submission:
             if tar_name != expected_tar_name:
                 msg = f"[ERROR] the tgz file is named incorrectly. Expected: {expected_tar_name}. Got: {tar_name}"
                 raise SubmissionError(msg)
+
+            # Raise a TarballContentError if content check fails
+            check_tarball_content(os.path.join(repo_path, file_path), chart_name)
+
         elif file_extension == ".prov":
             self.tarball.provenance = file_path
         else:
@@ -631,3 +656,48 @@ def download_index_data(
             raise HelmIndexError(f"Error parsing index file at {index_url}") from e
 
     return data
+
+
+def check_tarball_content(tarball_path: str, chart_name: str):
+    """Check the tarball content for errors.
+
+    Checks that the tarball contains a unique directory named after the chart. This directory must contain a Chart.yaml
+    file. The directory may contain additional files or folders. No other files or folder should be placed at the root
+    of the archive.
+
+    Args:
+        tarball_path (str): Location of the tarball to check on the local filesystem.
+        chart_name (str): Name of the corresponding chart.
+
+    Raise:
+        TarballContentError: If an error is found when checking the tarball content
+
+    """
+    found_chart_directory = False
+    found_chart_yaml = False
+    found_file_out_of_dir = False
+    expected_chart_file_path = os.path.join(chart_name, "Chart.yaml")
+    with tarfile.open(tarball_path, "r:gz") as tar:
+        tarinfo = tar.next()
+        while tarinfo:
+            if (
+                tarinfo.isdir() and tarinfo.name == chart_name
+            ) or tarinfo.name.startswith(chart_name + "/"):
+                found_chart_directory = True
+                if tarinfo.isfile() and tarinfo.name == expected_chart_file_path:
+                    found_chart_yaml = True
+            else:
+                found_file_out_of_dir = True
+            tarinfo = tar.next()
+
+    if not found_chart_directory:
+        msg = f"[ERROR] Incorrect tarball content: expected a {chart_name} directory"
+        raise TarballContentError(msg)
+
+    if found_file_out_of_dir:
+        msg = f"[ERROR] Incorrect tarball content: found a file outside the {chart_name} directory"
+        raise TarballContentError(msg)
+
+    if not found_chart_yaml:
+        msg = f"[ERROR] Incorrect tarball content: expected a {expected_chart_file_path} file"
+        raise TarballContentError(msg)
