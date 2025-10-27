@@ -8,17 +8,17 @@ Each test is run against a list of "Scenarios":
 """
 
 import contextlib
-import pytest
+from dataclasses import dataclass, field
 import os
+from pathlib import Path
 import re
-import responses
 import tarfile
 import tempfile
 
-from dataclasses import dataclass, field
-from reporegex import matchers
+import pytest
+import responses
 
-from pathlib import Path
+from reporegex import matchers
 from submission import submission
 
 # Define assets that are being reused accross tests
@@ -132,10 +132,10 @@ def create_tarball(tarball_basedir: str, tarball_name: str, tarball_content: lis
 class SubmissionInitScenario:
     api_url: str
     modified_files: list[str]
-    tarball_content: list[str] = field(default_factory=lambda: list())
+    tarball_content: list[str] = field(default_factory=list)
     expected_submission: submission.Submission = None
     excepted_exception: contextlib.ContextDecorator = field(
-        default_factory=lambda: contextlib.nullcontext()
+        default_factory=contextlib.nullcontext
     )
 
 
@@ -583,7 +583,7 @@ class WebCatalogOnlyScenario:
     report_web_catalog_only: str = None  # Set to None to skip key creation in report
     expected_output: bool = None
     excepted_exception: contextlib.ContextDecorator = field(
-        default_factory=lambda: contextlib.nullcontext()
+        default_factory=contextlib.nullcontext
     )
 
 
@@ -706,34 +706,36 @@ def test_parse_web_catalog_only(test_scenario):
 
         # Populate OWNERS file
         if test_scenario.create_owners:
-            owners_file = open(os.path.join(owners_base_path, "OWNERS"), "w")
-            owners_file.write(
-                "publicPgpKey: unknown"
-            )  # Make sure OWNERS is not an empty file
-            if test_scenario.owners_web_catalog_only:
+            with open(
+                os.path.join(owners_base_path, "OWNERS"), "w", encoding="utf-8"
+            ) as owners_file:
                 owners_file.write(
-                    f"\nproviderDelivery: {test_scenario.owners_web_catalog_only}"
-                )
-            owners_file.close()
+                    "publicPgpKey: unknown"
+                )  # Make sure OWNERS is not an empty file
+                if test_scenario.owners_web_catalog_only:
+                    owners_file.write(
+                        f"\nproviderDelivery: {test_scenario.owners_web_catalog_only}"
+                    )
 
         # Populate report.yaml file
         if test_scenario.create_report:
-            report_file = open(os.path.join(chart_base_path, "report.yaml"), "w")
-            report_file.writelines(
-                [
-                    "apiversion: v1",
-                    "\nkind: verify-report",
-                ]
-            )
-            if test_scenario.report_web_catalog_only:
+            with open(
+                os.path.join(chart_base_path, "report.yaml"), "w", encoding="utf-8"
+            ) as report_file:
                 report_file.writelines(
                     [
-                        "\nmetadata:",
-                        "\n    tool:",
-                        f"\n        webCatalogOnly: {test_scenario.report_web_catalog_only}",
+                        "apiversion: v1",
+                        "\nkind: verify-report",
                     ]
                 )
-            report_file.close()
+                if test_scenario.report_web_catalog_only:
+                    report_file.writelines(
+                        [
+                            "\nmetadata:",
+                            "\n    tool:",
+                            f"\n        webCatalogOnly: {test_scenario.report_web_catalog_only}",
+                        ]
+                    )
 
         with test_scenario.excepted_exception:
             test_scenario.input_submission.parse_web_catalog_only(repo_path=temp_dir)
@@ -818,23 +820,24 @@ def test_is_valid_web_catalog_only(test_scenario):
 
         # Populate report.yaml file
         if test_scenario.create_report:
-            report_file = open(os.path.join(chart_base_path, "report.yaml"), "w")
-            report_file.writelines(
-                [
-                    "apiversion: v1",
-                    "\nkind: verify-report",
-                ]
-            )
-            if test_scenario.report_has_digest:
+            with open(
+                os.path.join(chart_base_path, "report.yaml"), "w", encoding="utf-8"
+            ) as report_file:
                 report_file.writelines(
                     [
-                        "\nmetadata:",
-                        "\n    tool:",
-                        "\n        digests:",
-                        "\n            package: 7755e7cf43e55bbf2edafd9788b773b844fb15626c5ff8ff7a30a6d9034f3a33",
+                        "apiversion: v1",
+                        "\nkind: verify-report",
                     ]
                 )
-            report_file.close()
+                if test_scenario.report_has_digest:
+                    report_file.writelines(
+                        [
+                            "\nmetadata:",
+                            "\n    tool:",
+                            "\n        digests:",
+                            "\n            package: 7755e7cf43e55bbf2edafd9788b773b844fb15626c5ff8ff7a30a6d9034f3a33",
+                        ]
+                    )
 
         is_valid_web_catalog_only, reason = (
             test_scenario.input_submission.is_valid_web_catalog_only(repo_path=temp_dir)
@@ -846,12 +849,15 @@ def test_is_valid_web_catalog_only(test_scenario):
         assert test_scenario.expected_reason in reason
 
 
-def create_new_index(charts: list[submission.Chart] = []):
+def create_new_index(charts: list[submission.Chart] = None):
     """Create the JSON representation of a Helm chart index containing the provided list of charts
 
     The resulting index only contains the required information for the check_index to work.
 
     """
+    if charts is None:
+        charts = []
+
     index = {"apiVersion": "v1", "entries": {}}
 
     for chart in charts:
@@ -878,9 +884,9 @@ class CheckIndexScenario:
             version=expected_version,
         )
     )
-    index: dict = field(default_factory=lambda: create_new_index())
+    index: dict = field(default_factory=create_new_index)
     excepted_exception: contextlib.ContextDecorator = field(
-        default_factory=lambda: contextlib.nullcontext()
+        default_factory=contextlib.nullcontext
     )
 
 
@@ -931,9 +937,9 @@ class CheckReleaseTagScenario:
             version=expected_version,
         )
     )
-    exising_tags: list[str] = field(default_factory=lambda: list())
+    exising_tags: list[str] = field(default_factory=list)
     excepted_exception: contextlib.ContextDecorator = field(
-        default_factory=lambda: contextlib.nullcontext()
+        default_factory=contextlib.nullcontext
     )
 
 
@@ -965,7 +971,6 @@ def test_check_release_tag(test_scenario):
     if chart_release_tag not in test_scenario.exising_tags:
         responses.head(
             f"https://api.github.com/repos/my-fake-org/my-fake-repo/git/ref/tags/{chart_release_tag}",
-            # json=[{"filename": file} for file in test_scenario.modified_files],
             status=404,
         )
 
@@ -973,7 +978,6 @@ def test_check_release_tag(test_scenario):
         # Mock GitHub API
         responses.head(
             f"https://api.github.com/repos/my-fake-org/my-fake-repo/git/ref/tags/{tag}",
-            # json=[{"filename": file} for file in test_scenario.modified_files],
         )
 
     with test_scenario.excepted_exception:

@@ -1,6 +1,8 @@
+from dataclasses import dataclass, field
 import os
 import re
 import tarfile
+
 import requests
 import semver
 import yaml
@@ -10,7 +12,6 @@ try:
 except ImportError:
     from yaml import Loader
 
-from dataclasses import dataclass, field
 
 from owners import owners_file
 from tools import gitutils
@@ -19,44 +20,45 @@ from report import verifier_report
 
 xRateLimit = "X-RateLimit-Limit"
 xRateRemain = "X-RateLimit-Remaining"
+REQUEST_TIMEOUT = 10
 
 
 class SubmissionError(Exception):
-    """Root Exception for handling any error with the submission"""
-
-    pass
+    """Root exception for handling any error with the submission"""
 
 
 class DuplicateChartError(SubmissionError):
-    """This Exception is to be raised when the user attempts to submit a PR with more than one chart"""
-
-    pass
+    """This exception is raised when the user attempts to submit a PR with more than one chart"""
 
 
 class VersionError(SubmissionError):
-    """This Exception is to be raised when the version of the chart is not semver compatible"""
-
-    pass
+    """This exception is raised when the version of the chart is not semver compatible"""
 
 
 class WebCatalogOnlyError(SubmissionError):
-    pass
+    """This exception is raised when there is an error when determining the WebCatalogOnly attribute
+    or if it is inconsistently set
+
+    """
 
 
 class HelmIndexError(SubmissionError):
-    pass
+    """This exception is raised when the chart is already present in the index, or if there was an error
+    downloading or reading the helm index
+
+    """
 
 
 class ReleaseTagError(SubmissionError):
-    pass
+    """This exception is raised when the chart's release already exists"""
 
 
 class ChartError(SubmissionError):
-    pass
+    """This exception is raised when the redhat prefix is incorrectly set"""
 
 
 class TarballContentError(SubmissionError):
-    pass
+    """This exception is raised when checking the provided tarball content"""
 
 
 @dataclass
@@ -177,7 +179,7 @@ class Chart:
             "Authorization": f'Bearer {os.environ.get("BOT_TOKEN")}',
         }
         print(f"[INFO] checking tag: {tag_api}")
-        r = requests.head(tag_api, headers=headers)
+        r = requests.head(tag_api, headers=headers, timeout=REQUEST_TIMEOUT)
         if r.status_code == 200:
             msg = f"[ERROR] Helm chart release already exists in the GitHub Release/Tag: {tag_name}"
             raise ReleaseTagError(msg)
@@ -232,10 +234,10 @@ class Submission:
 
     api_url: str
     modified_files: list[str] = None
-    chart: Chart = field(default_factory=lambda: Chart())
-    report: Report = field(default_factory=lambda: Report())
-    source: Source = field(default_factory=lambda: Source())
-    tarball: Tarball = field(default_factory=lambda: Tarball())
+    chart: Chart = field(default_factory=Chart)
+    report: Report = field(default_factory=Report)
+    source: Source = field(default_factory=Source)
+    tarball: Tarball = field(default_factory=Tarball)
     modified_owners: list[str] = field(default_factory=list)
     modified_unknown: list[str] = field(default_factory=list)
     is_web_catalog_only: bool = None
@@ -274,7 +276,7 @@ class Submission:
                     "get", files_api_query, os.environ.get("BOT_TOKEN")
                 )
             except SystemExit as e:
-                raise SubmissionError(e)
+                raise SubmissionError(e) from e
 
             files = r.json()
             page_size = len(files)
@@ -643,7 +645,7 @@ def download_index_data(
 
     """
     index_url = f"https://raw.githubusercontent.com/{repository}/{branch}/index.yaml"
-    r = requests.get(index_url)
+    r = requests.get(index_url, timeout=REQUEST_TIMEOUT)
 
     data = {"apiVersion": "v1", "entries": {}}
     if r.status_code != 200:
