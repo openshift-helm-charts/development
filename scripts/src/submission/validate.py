@@ -42,7 +42,7 @@ def craft_pr_content_error_msg(
 
     """
     try:
-        s.parse_modified_files()
+        s.parse_modified_files(repo_path="pr-branch")
     except submission.SubmissionError as e:
         raise ParseFilesError(str(e))
 

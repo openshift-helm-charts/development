@@ -10,11 +10,15 @@ Each test is run against a list of "Scenarios":
 import contextlib
 import pytest
 import os
+import re
 import responses
+import tarfile
 import tempfile
 
 from dataclasses import dataclass, field
+from reporegex import matchers
 
+from pathlib import Path
 from submission import submission
 
 # Define assets that are being reused accross tests
@@ -69,10 +73,66 @@ def make_new_tarball_only_submission():
     return s
 
 
+def get_tarball_from_modified_files(modified_files: list[str]) -> str:
+    """Browse the modified files and return information on the first tarball found (.tgz)
+
+    Args:
+        modified_files (list[str]): List of files modified by the PR
+
+    Returns:
+        (str, str): basedir and filename of the tarball
+
+    """
+    _, _, tarballpattern = matchers.get_file_match_compiled_patterns()
+
+    for file in modified_files:
+        if tarballpattern.match(file):
+            return os.path.split(file)
+    return "", ""
+
+
+def create_tarball(tarball_basedir: str, tarball_name: str, tarball_content: list[str]):
+    """Create a tarball.
+
+    Args:
+        tarball_basedir (str): Directory in which to place the tarball. Will be created.
+        tarball_name (str): Name of the tarball including .tgz extension.
+        tarball_content (list[str]): List files to be included in the tarball. Files are empty as we don't perform any
+            check based on the content of the files, only on theire presence or absence in the tarball.
+
+    """
+    with tempfile.TemporaryDirectory() as content_temp_dir:
+        # Create tarball content in a temporary directory.
+        for file in tarball_content:
+            # Ensure base directory exists
+            os.makedirs(
+                os.path.join(content_temp_dir, os.path.dirname(file)), exist_ok=True
+            )
+            # Create an empty file - we don't check actual content of any files
+            Path(os.path.join(content_temp_dir, file)).touch()
+
+        # Create tarball base directory
+        os.makedirs(tarball_basedir)
+
+        # Create tarball
+        with tarfile.open(
+            os.path.join(tarball_basedir, tarball_name), mode="w:gz"
+        ) as tarball:
+            # os.listdir lists both files and directory
+            for file in os.listdir(content_temp_dir):
+                # Add the files and directories present in the root folder into the archive. Directory content is
+                # automatically added recursively.
+                # Use arcname option to rename the file/directory within the archive and make them relative paths.
+                tarball.add(
+                    os.path.join(content_temp_dir, file), arcname=os.path.basename(file)
+                )
+
+
 @dataclass
 class SubmissionInitScenario:
     api_url: str
     modified_files: list[str]
+    tarball_content: list[str] = field(default_factory=lambda: list())
     expected_submission: submission.Submission = None
     excepted_exception: contextlib.ContextDecorator = field(
         default_factory=lambda: contextlib.nullcontext()
@@ -142,20 +202,24 @@ scenarios_submission_init = [
         ),
     ),
     # PR contains an unsigned tarball
+    # Tarball contains a Chart.yaml placed under the directory named after the chart
     SubmissionInitScenario(
         api_url="https://api.github.com/repos/openshift-helm-charts/charts/pulls/4",
         modified_files=[
             f"charts/{expected_category}/{expected_organization}/{expected_name}/{expected_version}/{expected_name}-{expected_version}.tgz"
         ],
+        tarball_content=[os.path.join(expected_name, "Chart.yaml")],
         expected_submission=make_new_tarball_only_submission(),
     ),
     # PR contains a signed tarball
+    # Tarball contains a Chart.yaml placed under the directory named after the chart
     SubmissionInitScenario(
         api_url="https://api.github.com/repos/openshift-helm-charts/charts/pulls/5",
         modified_files=[
             f"charts/{expected_category}/{expected_organization}/{expected_name}/{expected_version}/{expected_name}-{expected_version}.tgz",
             f"charts/{expected_category}/{expected_organization}/{expected_name}/{expected_version}/{expected_name}-{expected_version}.tgz.prov",
         ],
+        tarball_content=[os.path.join(expected_name, "Chart.yaml")],
         expected_submission=submission.Submission(
             api_url="https://api.github.com/repos/openshift-helm-charts/charts/pulls/5",
             modified_files=[
@@ -167,6 +231,85 @@ scenarios_submission_init = [
                 found=True,
                 provenance=f"charts/{expected_category}/{expected_organization}/{expected_name}/{expected_version}/{expected_name}-{expected_version}.tgz.prov",
                 path=f"charts/{expected_category}/{expected_organization}/{expected_name}/{expected_version}/{expected_name}-{expected_version}.tgz",
+            ),
+        ),
+    ),
+    # PR contains an unsigned tarball
+    # Tarball contains a Chart.yaml and additional files, placed under the directory named after the chart
+    SubmissionInitScenario(
+        api_url="https://api.github.com/repos/openshift-helm-charts/charts/pulls/4",
+        modified_files=[
+            f"charts/{expected_category}/{expected_organization}/{expected_name}/{expected_version}/{expected_name}-{expected_version}.tgz"
+        ],
+        tarball_content=[
+            os.path.join(expected_name, "Chart.yaml"),
+            os.path.join(expected_name, "bar"),
+            os.path.join(expected_name, "foo", "baz"),
+        ],
+        expected_submission=make_new_tarball_only_submission(),
+    ),
+    # PR contains an unsigned tarball
+    # Tarball contains a Chart.yaml, placed under the directory that is not named after the chart
+    SubmissionInitScenario(
+        api_url="https://api.github.com/repos/openshift-helm-charts/charts/pulls/4",
+        modified_files=[
+            f"charts/{expected_category}/{expected_organization}/{expected_name}/{expected_version}/{expected_name}-{expected_version}.tgz"
+        ],
+        tarball_content=[os.path.join("not-awesome", "Chart.yaml")],
+        excepted_exception=pytest.raises(
+            submission.SubmissionError,
+            match=re.escape(
+                f"[ERROR] Incorrect tarball content: expected a {expected_name} directory"
+            ),
+        ),
+    ),
+    # PR contains an unsigned tarball
+    # Tarball contains additional files placed at the root directory
+    SubmissionInitScenario(
+        api_url="https://api.github.com/repos/openshift-helm-charts/charts/pulls/4",
+        modified_files=[
+            f"charts/{expected_category}/{expected_organization}/{expected_name}/{expected_version}/{expected_name}-{expected_version}.tgz"
+        ],
+        tarball_content=[
+            os.path.join(expected_name, "Chart.yaml"),
+            os.path.join("bar"),
+        ],
+        excepted_exception=pytest.raises(
+            submission.SubmissionError,
+            match=re.escape(
+                f"[ERROR] Incorrect tarball content: found a file outside the {expected_name} directory"
+            ),
+        ),
+    ),
+    # PR contains an unsigned tarball
+    # Tarball does not contain a Chart.yaml under the directory named after the chart
+    SubmissionInitScenario(
+        api_url="https://api.github.com/repos/openshift-helm-charts/charts/pulls/4",
+        modified_files=[
+            f"charts/{expected_category}/{expected_organization}/{expected_name}/{expected_version}/{expected_name}-{expected_version}.tgz"
+        ],
+        tarball_content=[
+            os.path.join(expected_name, "bar"),
+        ],
+        excepted_exception=pytest.raises(
+            submission.SubmissionError,
+            match=re.escape(
+                f"[ERROR] Incorrect tarball content: expected a {expected_name}/Chart.yaml file"
+            ),
+        ),
+    ),
+    # PR contains an unsigned tarball
+    # Tarball is empty
+    SubmissionInitScenario(
+        api_url="https://api.github.com/repos/openshift-helm-charts/charts/pulls/4",
+        modified_files=[
+            f"charts/{expected_category}/{expected_organization}/{expected_name}/{expected_version}/{expected_name}-{expected_version}.tgz"
+        ],
+        tarball_content=[],
+        excepted_exception=pytest.raises(
+            submission.SubmissionError,
+            match=re.escape(
+                f"[ERROR] Incorrect tarball content: expected a {expected_name} directory"
             ),
         ),
     ),
@@ -263,10 +406,24 @@ def test_submission_init(test_scenario):
         json=[{"filename": file} for file in test_scenario.modified_files],
     )
 
-    with test_scenario.excepted_exception:
-        s = submission.Submission(api_url=test_scenario.api_url)
-        s.parse_modified_files()
-        assert s == test_scenario.expected_submission
+    # Mock step checking out the PR locally - create tempdir with PR content
+    with tempfile.TemporaryDirectory() as prbanch_temp_dir:
+        # This step is only necessary if the PR contains a tarball, otherwise we don't perform any check of the content
+        # of the PR files.
+        tarball_path, tarball_name = get_tarball_from_modified_files(
+            test_scenario.modified_files
+        )
+        if tarball_path:
+            create_tarball(
+                os.path.join(prbanch_temp_dir, tarball_path),
+                tarball_name,
+                test_scenario.tarball_content,
+            )
+
+        with test_scenario.excepted_exception:
+            s = submission.Submission(api_url=test_scenario.api_url)
+            s.parse_modified_files(repo_path=prbanch_temp_dir)
+            assert s == test_scenario.expected_submission
 
 
 @responses.activate
