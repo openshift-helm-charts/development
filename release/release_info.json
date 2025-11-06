@@ -1,25 +1,9 @@
 {
-  "version": "1.9.0",
+  "version": "1.9.1",
   "info": [
-    "Bump the core-scripts group across 1 directory with 6 updates (#439) by @dependabot[bot]",
-    "use new RateLimitOverview class to check GitHub rate limit information (#448) by @komish",
-    "Ensure submission category metadata is in place for OWNERS-only submissions (#450) by @komish",
-    "Add event base ref for debugging (#451) by @komish",
-    "Resolve github.ref manually for certification workflow process (#455) by @komish",
-    "Fix RESOLVED_GITHUB_REF (#456) by @mgoerens",
-    "Refactor workflow to leverage Submission module (#454) by @mgoerens",
-    "Update CodeQL configuration and workflow with latest versions (#461) by @komish",
-    "add matrix context to notification (#462) by @komish",
-    "Get metadata from submission object (#460) by @mgoerens",
-    "specify github_token permissions for workflows (#463) by @komish",
-    "Fix exception hierarchy (#466) by @mgoerens",
-    "Add permissions at workflow call point (#467) by @komish",
-    "Add Slack ping when PR needs maintainer review (#464) by @mgoerens",
-    "replace pulled content with hash over branch reference (#468) by @komish",
-    "Prioritize long running behave feature (#469) by @mgoerens",
-    "Remove debug step (#470) by @mgoerens",
-    "Add check of tarball content (#471) by @mgoerens",
-    "Address some linter warnings in submission module (#472) by @mgoerens"
+    "Add BOT_TOKEN env var for tests to run on release (#478) by @mgoerens",
+    "Fix GITHUB_TOKEN permissions for automerge (#480) by @mgoerens",
+    "fix token permissions on job with merge step and error on fail (#481) by @komish"
   ],
   "charts": {
     "development": {
