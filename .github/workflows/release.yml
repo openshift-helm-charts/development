@@ -331,6 +331,7 @@ jobs:
         GITHUB_TOKEN:  ${{ secrets.GITHUB_TOKEN }}
         MERGE_METHOD: squash
         MERGE_LABELS: ""
+        MERGE_ERROR_FAIL: "true"
 
     - name: Check for PR merge
       if: |

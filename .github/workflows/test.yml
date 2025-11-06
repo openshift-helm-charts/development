@@ -146,7 +146,7 @@ jobs:
     - run-tests
     runs-on: ubuntu-24.04
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
     if: needs.determine-workflow-conditions.outputs.is-charts-release-branch == 'true'
     steps:
@@ -163,4 +163,5 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         MERGE_METHOD: squash
         MERGE_LABELS: ""
+        MERGE_ERROR_FAIL: "true"
 
