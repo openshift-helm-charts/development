@@ -30,7 +30,7 @@ env:
   # workflow to run E2E tests.
   #
   # If unset, the default (relative to openshift-helm-charts) is used.
-  SANDBOX_REPO: ${{ vars.SANDBOX_REPO || 'openshift-helm-charts/sandbox' }}
+  SANDBOX_REPO: ${{ vars.SANDBOX_REPO || 'openshift-helm-charts/sandbox-2025-11' }}
 
 concurrency:
   group: cert-ci-${{ github.event.pull_request.number }}
