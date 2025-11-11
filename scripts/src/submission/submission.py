@@ -101,7 +101,7 @@ class Chart:
             (self.category and self.category != category)
             or (self.organization and self.organization != organization)
             or (self.name and self.name != name)
-            or (self.version and self.version != version)
+            or (self.version and version and self.version != version)
         ):
             msg = "[ERROR] A PR must contain only one chart. Current PR includes files for multiple charts."
             raise DuplicateChartError(msg)
