@@ -21,6 +21,16 @@ env:
   # See https://github.com/openshift-helm-charts/development/issues/432 for more
   # information.
   RESOLVED_GITHUB_REF: ${{ github.ref || format('refs/heads/{0}', (github.event.pull_request.base.ref || ''))  }}
+  # SANDBOX_REPO is a reference to a sandbox repository used in testing. This
+  # workflow leverages this information to change some behaviors. Format is
+  # always organization/repository
+  #
+  # Maintainers may set this to another value via their repository configuration
+  # for debugging/testing/development. This avoid the need to change this
+  # workflow to run E2E tests.
+  #
+  # If unset, the default (relative to openshift-helm-charts) is used.
+  SANDBOX_REPO: ${{ vars.SANDBOX_REPO || 'openshift-helm-charts/sandbox-2025-11' }}
 
 concurrency:
   group: cert-ci-${{ github.event.pull_request.number }}
@@ -168,9 +178,10 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           PR_API_URL: ${{ github.event.pull_request._links.self.href }}
           GITHUB_REPO: ${{ github.repository }}
+          SANDBOX_REPO: ${{ env.SANDBOX_REPO }}
         run: |
           # Sandbox repo does not have an helm repository index
-          if [ "$GITHUB_REPOSITORY" == "openshift-helm-charts/sandbox" ]; then
+          if [ "${GITHUB_REPOSITORY}" == "${SANDBOX_REPO}" ]; then
             CLI_FLAG="--ignore_missing_helm_index"
           fi
 
@@ -556,7 +567,7 @@ jobs:
           # The token we use for this changes for the Sandbox repository because the sandbox repository
           # receives PRs from the openshift-helm-charts-bot, and that same bot cannot approve its own
           # PRs which breaks workflows. Instead, for the Sandbox repo, we approve with the GHA bot.
-          github-token: ${{ github.repository == 'openshift-helm-charts/sandbox' && secrets.GITHUB_TOKEN || secrets.BOT_TOKEN }}
+          github-token: ${{ github.repository == env.SANDBOX_REPO && secrets.GITHUB_TOKEN || secrets.BOT_TOKEN }}
 
       - name: Merge PR
         id: merge_pr
@@ -706,7 +717,7 @@ jobs:
 
       - name: Add a GitHub comment if release has failed
         uses: actions/github-script@v7
-        if: ${{ failure() && github.repository != 'openshift-helm-charts/sandbox' }}
+        if: ${{ failure() && github.repository != env.SANDBOX_REPO }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -726,7 +737,7 @@ jobs:
       # This can be removed once the metrics execution is restructured to have access to the PR
       # comment, or pulled out of the release job entirely.
       - name: Retrieve PR comment for metrics
-        if: ${{ always() && needs.setup.outputs.run_build == 'true' && github.repository != 'openshift-helm-charts/sandbox' }}
+        if: ${{ always() && needs.setup.outputs.run_build == 'true' && github.repository != env.SANDBOX_REPO }}
         env:
           MESSAGE_FILE: ${{ needs.manage-gh-pr.outputs.message_file }}
           MESSAGE_TEXT_B64: ${{ needs.manage-gh-pr.outputs.message_text_base64 }}
@@ -736,7 +747,7 @@ jobs:
 
       - name: Add metrics
         id: add_metrics
-        if: ${{ always() && needs.setup.outputs.run_build == 'true' && github.repository != 'openshift-helm-charts/sandbox' }}
+        if: ${{ always() && needs.setup.outputs.run_build == 'true' && github.repository != env.SANDBOX_REPO }}
         continue-on-error: true
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
