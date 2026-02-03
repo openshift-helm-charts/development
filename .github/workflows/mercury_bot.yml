@@ -133,7 +133,7 @@ jobs:
       - name: Assert renaming semantics
         id: assert-rename-semantics
         if: |
-          steps.populate-file-mod-type.outputs.is-rename
+          steps.populate-file-mod-type.outputs.is-rename == 'true'
           && steps.determine-lock-status.outputs.chart-is-locked == 'true'
         env:
           PREVIOUS_FILENAME: ${{ steps.populate-file-mod-type.outputs.previous-filename && steps.populate-file-mod-type.outputs.previous-filename || 'unset' }}
@@ -142,7 +142,6 @@ jobs:
         run: |
           echo "Current lock is set to ${CURRENT_LOCK}"
           echo "The previous filename for this rename is: ${PREVIOUS_FILENAME}"
-          echo "The new chart name is consistent through the namespace rename: ${CHART_NAME_CONSISTENT}"
           echo locked-to-previous-filename="${LOCKED_TO_PREVIOUS}" | tee -a $GITHUB_OUTPUT
 
       # Do not merge net-new OWNERS files for locked chart names. Allow a
