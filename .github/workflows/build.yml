@@ -2,9 +2,9 @@ name: CI
 
 on:
   # NOTE: There are implementation details in this workflow that require the
-  # triggering event be pull_request_target. See RESOLVED_GITHUB_REF before
-  # changing the events that can trigger this workflow.
-  pull_request_target:
+  # triggering event be pull_request_target or pull_request. See 
+  # RESOLVED_GITHUB_REF before changing the events that can trigger this workflow.
+  pull_request:
     types: [opened, synchronize, reopened, edited, ready_for_review, labeled]
 
 env:
@@ -18,9 +18,13 @@ env:
   # Runner does not properly populate the GITHUB_REF value. For this workflow,
   # we reconstruct a ref but only in cases where GITHUB_REF is missing.
   #
+  # We use base_ref in cases where the pull_request event is used. Otherwise
+  # we expect this pull content from the default branch (main) in our repo, 
+  # which makes sense for production cases.
+  #
   # See https://github.com/openshift-helm-charts/development/issues/432 for more
   # information.
-  RESOLVED_GITHUB_REF: ${{ github.ref || format('refs/heads/{0}', (github.event.pull_request.base.ref || ''))  }}
+  RESOLVED_GITHUB_REF: ${{ format('refs/heads/{0}', (github.event_name == 'pull_request' && github.base_ref || 'main')) }}
   # SANDBOX_REPO is a reference to a sandbox repository used in testing. This
   # workflow leverages this information to change some behaviors. Format is
   # always organization/repository
@@ -54,6 +58,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RESOLVED_GITHUB_REF }}
 
       - name: Set up Python
         id: setup-python
@@ -154,6 +160,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RESOLVED_GITHUB_REF }}
 
       - name: Checkout PR Branch
         if: ${{ needs.setup.outputs.run_build == 'true' }}
@@ -246,6 +254,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RESOLVED_GITHUB_REF }}
 
       - name: Checkout PR Branch
         if: ${{ needs.setup.outputs.run_build == 'true' }}
@@ -454,6 +464,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RESOLVED_GITHUB_REF }}
 
       - name: Checkout PR Branch
         if: ${{ needs.setup.outputs.run_build == 'true' }}
@@ -598,6 +610,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RESOLVED_GITHUB_REF }}
 
       - name: Checkout PR Branch
         if: ${{ needs.setup.outputs.run_build == 'true' }}
