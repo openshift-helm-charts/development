@@ -3,7 +3,7 @@ name: CI
 on:
   # NOTE: There are implementation details in this workflow that require the
   # triggering event be pull_request_target or pull_request. See 
-  # RESOLVED_GITHUB_REF before changing the events that can trigger this workflow.
+  # TRUSTED_REF before changing the events that can trigger this workflow.
   pull_request:
     types: [opened, synchronize, reopened, edited, ready_for_review, labeled]
 
@@ -14,17 +14,10 @@ env:
   # fetch them from the GitHub API a second time.
   SUBMISSION_PATH: "${{ github.workspace }}/submission.json"
   SUBMISSION_ARTIFACT_NAME: submission
-  # RESOLVED_GITHUB_REF works around an GitHub Actions bug where the GitHub
-  # Runner does not properly populate the GITHUB_REF value. For this workflow,
-  # we reconstruct a ref but only in cases where GITHUB_REF is missing.
-  #
-  # We use base_ref in cases where the pull_request event is used. Otherwise
-  # we expect this pull content from the default branch (main) in our repo, 
-  # which makes sense for production cases.
-  #
-  # See https://github.com/openshift-helm-charts/development/issues/432 for more
-  # information.
-  RESOLVED_GITHUB_REF: ${{ format('refs/heads/{0}', (github.event_name == 'pull_request' && github.base_ref || 'main')) }}
+  # TRUSTED_REF is a repository ref value (e.g. refs/heads/main) that contains
+  # trusted content for use in CI. In effect, this ref should contain
+  # trusted content in the scripts/* directory.
+  TRUSTED_REF: ${{ format('refs/heads/{0}', (github.event_name == 'pull_request' && github.base_ref || 'main')) }}
   # SANDBOX_REPO is a reference to a sandbox repository used in testing. This
   # workflow leverages this information to change some behaviors. Format is
   # always organization/repository
@@ -59,7 +52,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.RESOLVED_GITHUB_REF }}
+          ref: ${{ env.TRUSTED_REF }}
 
       - name: Set up Python
         id: setup-python
@@ -161,7 +154,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.RESOLVED_GITHUB_REF }}
+          ref: ${{ env.TRUSTED_REF }}
 
       - name: Checkout PR Branch
         if: ${{ needs.setup.outputs.run_build == 'true' }}
@@ -255,7 +248,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.RESOLVED_GITHUB_REF }}
+          ref: ${{ env.TRUSTED_REF }}
 
       - name: Checkout PR Branch
         if: ${{ needs.setup.outputs.run_build == 'true' }}
@@ -465,7 +458,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.RESOLVED_GITHUB_REF }}
+          ref: ${{ env.TRUSTED_REF }}
 
       - name: Checkout PR Branch
         if: ${{ needs.setup.outputs.run_build == 'true' }}
@@ -611,7 +604,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.RESOLVED_GITHUB_REF }}
+          ref: ${{ env.TRUSTED_REF }}
 
       - name: Checkout PR Branch
         if: ${{ needs.setup.outputs.run_build == 'true' }}
@@ -695,7 +688,7 @@ jobs:
           GITHUB_EVENT_NUMBER: ${{ github.event.number }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          INDEX_BRANCH=$(if [ "${RESOLVED_GITHUB_REF}" = "refs/heads/main" ]; then echo "gh-pages"; else echo "${RESOLVED_GITHUB_REF##*/}-gh-pages"; fi)
+          INDEX_BRANCH=$(if [ "${TRUSTED_REF}" = "refs/heads/main" ]; then echo "gh-pages"; else echo "${TRUSTED_REF##*/}-gh-pages"; fi)
 
           echo "[INFO] Creating Git worktree for index branch"
           INDEX_DIR=$(mktemp -d)

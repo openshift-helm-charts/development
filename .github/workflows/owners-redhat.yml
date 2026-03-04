@@ -7,7 +7,7 @@ name: Red Hat OWNERS Files
 on:
   # NOTE: There are implementation details in this workflow that require the
   # triggering event be pull_request_target or pull_request. See
-  # RESOLVED_GITHUB_REF before changing the events that can trigger this workflow.
+  # TRUSTED_REF before changing the events that can trigger this workflow.
   pull_request:
     paths:
     - charts/redhat/**/OWNERS
@@ -15,17 +15,10 @@ on:
 
 env:
   SUCCESS_LABEL: redhat-owners-content-ok
-  # RESOLVED_GITHUB_REF works around an GitHub Actions bug where the GitHub
-  # Runner does not properly populate the GITHUB_REF value. For this workflow,
-  # we reconstruct a ref but only in cases where GITHUB_REF is missing.
-  #
-  # We use base_ref in cases where the pull_request event is used. Otherwise
-  # we expect this pull content from the default branch (main) in our repo,
-  # which makes sense for production cases.
-  #
-  # See https://github.com/openshift-helm-charts/development/issues/432 for more
-  # information.
-  RESOLVED_GITHUB_REF: ${{ format('refs/heads/{0}', (github.event_name == 'pull_request' && github.base_ref || 'main')) }}
+  # TRUSTED_REF is a repository ref value (e.g. refs/heads/main) that contains
+  # trusted content for use in CI. In effect, this ref should contain
+  # trusted content in the scripts/* directory.
+  TRUSTED_REF: ${{ format('refs/heads/{0}', (github.event_name == 'pull_request' && github.base_ref || 'main')) }}
 jobs:
   gather-metadata:
     name: Gather Metadata From Path
@@ -64,7 +57,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.RESOLVED_GITHUB_REF }}
+          ref: ${{ env.TRUSTED_REF }}
 
       - name: Set up Python
         uses: ./.github/actions/setup-python
@@ -105,7 +98,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.RESOLVED_GITHUB_REF }}
+          ref: ${{ env.TRUSTED_REF }}
       - name: Set up Python
         uses: ./.github/actions/setup-python
       - name: Install Python CI tooling
