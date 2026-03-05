@@ -39,7 +39,7 @@ jobs:
           script: |
             const successLabel = process.env.SUCCESS_LABEL;
             try {
-              await github.issues.removeLabel({
+              await github.rest.issues.removeLabel({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
