@@ -1,0 +1,104 @@
+name: Smoke Test
+
+# Runs smoke testing on pull requests that have the trusted label. Useful for
+# cases where the automated pull request testing won't run because the
+# contributor is not approved. E.g. Dependabot PRs.
+#
+# Approved maintainers adding the label acts effectively as a signoff on the
+# content being tested.
+#
+# For maintainers, the pre-exiting test workflow (test.yml) is expected to run
+# in place of this workflow.
+
+on:
+  pull_request_target:
+    branches: [main]
+    types:
+      - opened
+      - synchronize
+      - closed
+      - labeled
+      - reopened  
+  
+env:
+  TRUSTED_LABEL: ok-to-test
+
+concurrency:
+  cancel-in-progress: true
+  group: smoke-test-pr-${{ github.event.pull_request.number }}
+
+jobs:
+  manage-label-on-content-change:
+    name: Remove label on state change
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    # Labeling is not considered a state change that
+    # should trigger removing the label.
+    if: github.event.action != 'labeled'
+    steps:
+    - name: Remove label on state change
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        REPOSITORY: ${{ github.repository }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+      run: |
+        gh pr edit \
+          --remove-label "${TRUSTED_LABEL}" \
+          --repo "${REPOSITORY}" \
+          "${PR_NUMBER}"
+
+  check-ok-to-test:
+    # NOTE:
+    # This step just adds observability into the process of parsing label
+    # events, and could likely be replaced with a conditional to
+    # run-tests in the future.
+    name: Assert content is OK to test
+    if: github.event.action == 'labeled'
+    outputs:
+      is-ok-to-test: ${{ steps.parse-label-event.outputs.ok-to-test }}
+      target-sha: ${{ steps.emit-commit-ref.outputs.test-sha }}
+      target-repo: ${{ steps.emit-commit-ref.outputs.test-repo }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+    - name: Parse Labeling Event
+      id: parse-label-event
+      env:
+        EVENT_LABEL: ${{ github.event.label.name }}
+        EVENT_NUMBER: ${{ github.event.pull_request.number }}
+        OK_TO_TEST: ${{ env.TRUSTED_LABEL == github.event.label.name }}
+      run: |
+        echo "The label \"${EVENT_LABEL}\" has been applied to PR ${EVENT_NUMBER}."
+        echo "The trusted label is: ${TRUSTED_LABEL}."
+        echo "The label event is for the trusted label: ${OK_TO_TEST}"
+        echo "ok-to-test=${OK_TO_TEST}" | tee "${GITHUB_OUTPUT}"
+    - name: Emit Commit Ref
+      id: emit-commit-ref
+      if: steps.parse-label-event.outputs.ok-to-test == 'true'
+      env:
+        TEST_SHA: ${{ github.event.pull_request.head.sha }}
+        TEST_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+      run: |
+        echo "${TEST_REPO} at ${TEST_SHA} is considered ok to test."
+        echo "test-sha=${TEST_SHA}" | tee "${GITHUB_OUTPUT}"
+        echo "test-repo=${TEST_REPO}" | tee "${GITHUB_OUTPUT}"
+
+  run-tests:
+    name: Run Tests
+    needs: [check-ok-to-test]
+    if: needs.check-ok-to-test.outputs.is-ok-to-test == 'true'
+    uses: ./.github/workflows/behave.yml
+    permissions:
+      contents: read
+    with:
+      tags: smoke
+      behave-logging-level: WARNING
+      pr-body: "Test triggered by PR ${{ github.event.pull_request.html_url }}."
+      checkout-fetch-depth: 0
+      checkout-repository: ${{ needs.check-ok-to-test.outputs.target-repo }}
+      checkout-ref: ${{ needs.check-ok-to-test.outputs.target-sha }}
+    secrets:
+      bot-name: ${{ secrets.BOT_NAME }}
+      bot-token: ${{ secrets.BOT_TOKEN }}

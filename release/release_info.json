@@ -27,7 +27,8 @@
         ".github/workflows/metrics.yml",
         ".github/workflows/codeql.yml",
         ".github/dependabot.yml",
-        ".github/workflows/python-test.yml"
+        ".github/workflows/python-test.yml",
+        ".github/workflows/test-smoke-on-label.yml"
       ]
     },
     "stage": {
@@ -44,7 +45,8 @@
         ".github/workflows/codeql.yml",
         ".github/workflows/check-locks-on-owners-submission.yml",
         ".github/dependabot.yml",
-        ".github/workflows/python-test.yml"
+        ".github/workflows/python-test.yml",
+        ".github/workflows/test-smoke-on-label.yml"
       ]
     }
   }
