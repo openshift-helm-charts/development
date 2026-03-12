@@ -8,12 +8,12 @@ Each test is run against a list of "Scenarios":
 """
 
 import contextlib
-from dataclasses import dataclass, field
 import os
-from pathlib import Path
 import re
 import tarfile
 import tempfile
+from dataclasses import dataclass, field
+from pathlib import Path
 
 import pytest
 import responses
