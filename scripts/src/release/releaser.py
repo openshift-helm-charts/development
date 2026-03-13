@@ -152,7 +152,7 @@ def make_required_changes(release_info_dir, origin, destination):
             else:
                 print(f"Ignore/delete file {ignore_this}")
                 os.remove(ignore_this)
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             print(
                 f"[INFO] path {ignore_this} is explicitly ignored but was not found when syncing {from_repository} to {to_repository}."
                 + "This file can be removed from the ignore section of release_info.json"

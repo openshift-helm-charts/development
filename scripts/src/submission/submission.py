@@ -1,7 +1,7 @@
-from dataclasses import dataclass, field
 import os
 import re
 import tarfile
+from dataclasses import dataclass, field
 
 import requests
 import semver
@@ -14,9 +14,9 @@ except ImportError:
 
 
 from owners import owners_file
-from tools import gitutils
 from reporegex import matchers
 from report import verifier_report
+from tools import gitutils
 
 xRateLimit = "X-RateLimit-Limit"
 xRateRemain = "X-RateLimit-Remaining"
