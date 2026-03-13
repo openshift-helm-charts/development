@@ -21,6 +21,10 @@
         "docs",
         "tests"
       ],
+      "edit": {
+        ".github/workflows/build.yml": "switch_workflow_to_pull_request_target",
+        ".github/workflows/owners-redhat.yml": "switch_workflow_to_pull_request_target"
+      },
       "ignore": [
         ".github/workflows/release.yml",
         ".github/workflows/nightly_test.yml",
@@ -36,6 +40,10 @@
         "scripts",
         "tests"
       ],
+      "edit": {
+        ".github/workflows/build.yml": "switch_workflow_to_pull_request_target",
+        ".github/workflows/owners-redhat.yml": "switch_workflow_to_pull_request_target"
+      },
       "ignore": [
         ".github/workflows/release.yml",
         ".github/workflows/nightly_test.yml",
