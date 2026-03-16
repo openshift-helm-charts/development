@@ -1,9 +1,17 @@
 {
-  "version": "1.9.1",
+  "version": "1.9.2",
   "info": [
-    "Add BOT_TOKEN env var for tests to run on release (#478) by @mgoerens",
-    "Fix GITHUB_TOKEN permissions for automerge (#480) by @mgoerens",
-    "fix token permissions on job with merge step and error on fail (#481) by @komish"
+    "Parameterize sandbox repo and redirect to experimental sandbox (#485) by @komish",
+    "Fix error message for PRs with OWNERS and chart (#479) by @mgoerens",
+    "avoid iterating over releases if tag is known (#486) by @komish",
+    "bump urllib3 to 2.6.3 (#489) by @komish",
+    "allow namespace changes prior to content publishing (#490) by @komish",
+    "Ensure we do a string check of the is_rename value (#492) by @komish",
+    "use pull_request event trigger to fix nightly and CI tests (#493) by @komish",
+    "Add editing capabilities to the release process (#498) by @mgoerens",
+    "use the rest object to interact with the issues API (#495) by @komish",
+    "Bump the core-scripts group across 1 directory with 22 updates (#497) by @komish",
+    "apply new lint rules and update config format (#499) by @komish"
   ],
   "charts": {
     "development": {
