@@ -7,8 +7,6 @@ import subprocess
 import sys
 
 import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util import Retry
 import semantic_version
 import semver
 import yaml
@@ -459,15 +457,7 @@ def verify_package_digest(url, report):
     target_digest = None
     pkg_digest = None
 
-    retry = Retry(
-        total=3,
-        backoff_factor=2,
-        status_forcelist=[404, 429, 500, 502, 503, 504],
-    )
-    session = requests.Session()
-    session.mount("https://", HTTPAdapter(max_retries=retry))
-
-    response = session.get(url)
+    response = requests.get(url, allow_redirects=True)
     if response.status_code == 200:
         target_digest = hashlib.sha256(response.content).hexdigest()
 
