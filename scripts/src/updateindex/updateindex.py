@@ -118,8 +118,8 @@ def set_package_digest(chart_entry, chart_url):
     print("[INFO] set package digests.")
 
     retry = Retry(
-        total=3,
-        backoff_factor=2,
+        total=4,
+        backoff_factor=3,
         status_forcelist=[404, 429, 500, 502, 503, 504],
         raise_on_status=False,
     )
