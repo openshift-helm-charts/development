@@ -200,29 +200,17 @@ jobs:
           path: ${{ env.SUBMISSION_PATH }}
 
       - name: Add 'content-ok' label
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.rest.issues.addLabels({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              labels: ['content-ok']
-            })
+        run: gh pr edit "${PR_NUMBER}" --add-label "content-ok"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
 
       - name: Remove 'content-ok' label
-        uses: actions/github-script@v7
         if: ${{ failure() && contains( github.event.pull_request.labels.*.name, 'content-ok') }}
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.rest.issues.removeLabel({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              name: 'content-ok'
-            })
+        run: gh pr edit "${PR_NUMBER}" --remove-label "content-ok"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
 
 
   chart-verifier:
@@ -273,21 +261,12 @@ jobs:
           name: ${{ env.SUBMISSION_ARTIFACT_NAME }}
 
       - name: Remove 'authorized-request' label from PR
-        uses: actions/github-script@v7
         if: ${{ needs.setup.outputs.run_build == 'true' && contains( github.event.pull_request.labels.*.name, 'authorized-request') }}
         continue-on-error: true
+        run: gh pr edit "${PR_NUMBER}" --remove-label "authorized-request"
         env:
-          GITHUB_EVENT_NUMBER: ${{ github.event.number }}
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            var issue_number = process.env.GITHUB_EVENT_NUMBER;
-            github.rest.issues.removeLabel({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: Number(issue_number),
-              name: 'authorized-request'
-            })
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
 
       - name: install chart verifier for action
         uses: redhat-actions/openshift-tools-installer@v1
@@ -522,21 +501,11 @@ jobs:
         
       - name: Comment on PR
         if: ${{ needs.setup.outputs.run_build == 'true' }}
-        uses: actions/github-script@v7
+        run: gh pr comment "${PR_NUMBER}" --body-file "${MESSAGE_FILE}"
         env:
-          GITHUB_EVENT_NUMBER: ${{ github.event.number }}
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            var fs = require('fs');
-            var issue_number = process.env.GITHUB_EVENT_NUMBER;
-            var comment = fs.readFileSync('./pr/comment', {encoding:'utf8', flag:'r'});
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: Number(issue_number),
-              body: comment
-            });
+          MESSAGE_FILE: ${{ steps.pr_comment.outputs.message-file }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
 
       - name: Send message to helm_dev slack channel
         id: notify_to_dev
@@ -553,16 +522,10 @@ jobs:
         if: ${{ needs.validate-submission.outputs.validate-submission-outcome == 'success' &&
                 needs.chart-verifier.outputs.run-verifier-outcome != 'failure' &&
                 needs.setup.outputs.run_build == 'true' }}
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            github.rest.issues.addLabels({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              labels: ['authorized-request']
-            })
+        run: gh pr edit "${PR_NUMBER}" --add-label "authorized-request"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
 
       - name: Approve PR
         id: approve_pr
@@ -723,21 +686,18 @@ jobs:
             HEAD:refs/heads/${INDEX_BRANCH}
 
       - name: Add a GitHub comment if release has failed
-        uses: actions/github-script@v7
         if: ${{ failure() && github.repository != env.SANDBOX_REPO }}
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `### Release job failed
+        run: |
+          gh pr comment "${PR_NUMBER}" --body "${COMMENT_BODY}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
+          COMMENT_BODY: |
+            ### Release job failed
 
-              An error occured while updating the Helm repository index.
+            An error occured while updating the Helm repository index.
 
-              cc @komish @mgoerens`
-            });
+            cc @komish @mgoerens
 
       # Note(komish): This step is a temporary workaround. Metrics requires the PR comment
       # to be available, but it is written to the filesystem in the previous job.
