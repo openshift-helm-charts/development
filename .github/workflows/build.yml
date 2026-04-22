@@ -256,7 +256,7 @@ jobs:
           python-version: ${{ steps.setup-python.outputs.python-version }}
 
       - name: Download submission information
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           name: ${{ env.SUBMISSION_ARTIFACT_NAME }}
 
@@ -458,13 +458,13 @@ jobs:
 
       # Submission information should always be present
       - name: Download submission information
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           name: ${{ env.SUBMISSION_ARTIFACT_NAME }}
 
       # Chart report errors are only present if an error has occured during the chart_report
       - name: Download chart_report errors
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         if: ${{ needs.chart-verifier.outputs.upload-chart-report-errors-outcome == 'success' }}
         with:
           name: chart_report_errors
