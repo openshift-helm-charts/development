@@ -193,7 +193,7 @@ jobs:
             ${CLI_FLAG}
       
       - name: Upload PR information
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: ${{ always() && steps.validate-submission.outputs.submission_file_present == 'true' }}
         with:
           name: ${{ env.SUBMISSION_ARTIFACT_NAME }}
@@ -397,7 +397,7 @@ jobs:
 
       - name: Upload chart_report errors
         id: upload-chart-report-errors
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: ${{ always() && steps.check_report.outcome == 'failure' }}
         with:
           name: chart_report_errors
