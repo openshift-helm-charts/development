@@ -76,7 +76,7 @@ jobs:
       - name: Send message to helm_dev slack channel
         id: notify_dev
         if: ${{ always() && github.event_name == 'schedule' && github.repository == 'openshift-helm-charts/development' && steps.release_metrics.conclusion != 'success' }}
-        uses: archive/github-actions-slack@v2.8.0
+        uses: archive/github-actions-slack@433fef9978d3adae73168bfc9c5a7ce722780231
         with:
           slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
           slack-channel: C02979BDUPL
@@ -91,7 +91,7 @@ jobs:
       - name: Send message to helm_notify slack channel
         id: notify
         if: ${{ always() && github.event_name == 'schedule' && github.repository == 'openshift-helm-charts/development' && steps.release_metrics.conclusion == 'success' }}
-        uses: archive/github-actions-slack@v2.8.0
+        uses: archive/github-actions-slack@433fef9978d3adae73168bfc9c5a7ce722780231
         with:
           slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
           slack-channel: C04K1ARMH8A

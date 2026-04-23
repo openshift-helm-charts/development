@@ -510,7 +510,7 @@ jobs:
       - name: Send message to helm_dev slack channel
         id: notify_to_dev
         if: github.repository == 'openshift-helm-charts/charts' && steps.pr_comment.outputs.ping_helm_dev == 'true'
-        uses: archive/github-actions-slack@v2.8.0
+        uses: archive/github-actions-slack@433fef9978d3adae73168bfc9c5a7ce722780231
         with:
           slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
           slack-channel: C02979BDUPL
@@ -753,7 +753,7 @@ jobs:
       - name: Alert Slack helm_dev on failure to update metrics
         continue-on-error: true
         if: steps.add_metrics.outcome == 'failure'
-        uses: archive/github-actions-slack@v2.8.0
+        uses: archive/github-actions-slack@433fef9978d3adae73168bfc9c5a7ce722780231
         with:
           slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
           slack-channel: C02979BDUPL
