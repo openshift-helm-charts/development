@@ -183,16 +183,17 @@ jobs:
         if: |
           steps.check_for_owners.outputs.merge_pr == 'true'
           && steps.safe-to-merge.outputs.merge_pr == 'true'
-        uses: hmarr/auto-approve-action@v4
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr review "${PR_NUMBER}" --approve
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
+
 
       - name: Merge PR
         id: merge_pr
         if: ${{ steps.approve_pr.conclusion == 'success' }}
-        uses: pascalgn/automerge-action@v0.16.2
+        run: gh pr merge "${PR_NUMBER}" --auto --squash --match-head-commit "${PR_HEAD_COMMIT}"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MERGE_METHOD: squash
-          MERGE_LABELS: ""
-          MERGE_ERROR_FAIL: "true"
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
+          PR_HEAD_COMMIT: ${{ github.event.pull_request.head.sha }}

@@ -530,21 +530,22 @@ jobs:
       - name: Approve PR
         id: approve_pr
         if: ${{ needs.chart-verifier.outputs.check_report-outcome == 'success' }}
-        uses: hmarr/auto-approve-action@v4
-        with:
+        run: gh pr review "${PR_NUMBER}" --approve
+        env:
           # The token we use for this changes for the Sandbox repository because the sandbox repository
           # receives PRs from the openshift-helm-charts-bot, and that same bot cannot approve its own
           # PRs which breaks workflows. Instead, for the Sandbox repo, we approve with the GHA bot.
-          github-token: ${{ github.repository == env.SANDBOX_REPO && secrets.GITHUB_TOKEN || secrets.BOT_TOKEN }}
+          GITHUB_TOKEN: ${{ github.repository == env.SANDBOX_REPO && secrets.GITHUB_TOKEN || secrets.BOT_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
 
       - name: Merge PR
         id: merge_pr
         if: ${{ steps.approve_pr.outcome == 'success' }}
-        uses: pascalgn/automerge-action@v0.16.2
+        run: gh pr merge "${PR_NUMBER}" --auto --squash --match-head-commit "${PR_HEAD_COMMIT}"
         env:
           GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
-          MERGE_METHOD: squash
-          MERGE_LABELS: ""
+          PR_NUMBER: ${{ github.event.number }}
+          PR_HEAD_COMMIT: ${{ github.event.pull_request.head.sha }}
 
       - name: Check for PR merge
         if: ${{ steps.merge_pr.outcome == 'success' }}
