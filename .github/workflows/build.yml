@@ -596,7 +596,7 @@ jobs:
 
       - name: Block until there is no running workflow
         if: ${{ needs.setup.outputs.run_build == 'true' }}
-        uses: softprops/turnstyle@v2
+        uses: softprops/turnstyle@e565d2d86403c5d23533937e95980570545e5586
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
