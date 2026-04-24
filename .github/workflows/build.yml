@@ -628,7 +628,7 @@ jobs:
       # The release tag format is <organization_name>-<chart_name>-<chart_version>
       - name: Create GitHub release
         if: ${{ needs.validate-submission.outputs.web_catalog_only == 'False' }}
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ needs.validate-submission.outputs.release_tag }}
