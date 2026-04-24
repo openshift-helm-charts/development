@@ -343,7 +343,7 @@ jobs:
       - name: Get profile version set in report provided by the user
         id: get-profile-version
         if: ${{ needs.setup.outputs.run_build == 'true' && steps.verify_requires.outputs.report_provided == 'true' }}
-        uses: mikefarah/yq@master
+        uses: mikefarah/yq@751d8ad57b84f1794661bc70c0afb92a22ad7b3c
         with:
           cmd: yq '.metadata.tool.profile.version' ${{ format('./pr-branch/{0}', steps.verify_requires.outputs.provided_report_relative_path) }}
 
@@ -351,7 +351,7 @@ jobs:
         id: get-kube-range
         if: ${{ needs.setup.outputs.run_build == 'true' && steps.verify_requires.outputs.report_provided == 'true' }}
         continue-on-error: true
-        uses: mikefarah/yq@master
+        uses: mikefarah/yq@751d8ad57b84f1794661bc70c0afb92a22ad7b3c
         with:
           cmd: yq '.metadata.chart.kubeversion' ${{ format('./pr-branch/{0}', steps.verify_requires.outputs.provided_report_relative_path) }}
 
