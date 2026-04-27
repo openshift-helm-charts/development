@@ -41,27 +41,27 @@ jobs:
           build-mode: none
     steps:
     - name: Checkout repository
-      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       with:
         persist-credentials: false
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@f443b600d91635bebf5b0d9ebc620189c0d6fba5 # v4.30.8
+      uses: github/codeql-action/init@95e58e9a2cdfd71adc6e0353d5c52f41a045d225
       with:
         languages: ${{ matrix.language }}
         build-mode: ${{ matrix.build-mode }}
 
     - name: Perform CodeQL Analysis
       id: codeql-analysis
-      uses: github/codeql-action/analyze@f443b600d91635bebf5b0d9ebc620189c0d6fba5 # v4.30.8
+      uses: github/codeql-action/analyze@95e58e9a2cdfd71adc6e0353d5c52f41a045d225
       with:
         category: "/language:${{matrix.language}}"
 
     - name: Send message to helm_dev slack channel
       id: notify_dev
       if: ${{ always() &&  github.event_name == 'schedule' && steps.codeql-analysis.conclusion != 'success'}}
-      uses: archive/github-actions-slack@v2.8.0
+      uses: archive/github-actions-slack@433fef9978d3adae73168bfc9c5a7ce722780231
       with:
         slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
         slack-channel: C02979BDUPL
@@ -76,7 +76,7 @@ jobs:
     - name: Send message to helm_notify slack channel
       id: notify
       if: ${{ always() &&  github.event_name == 'schedule' && steps.codeql-analysis.conclusion == 'success'}}
-      uses: archive/github-actions-slack@v2.8.0
+      uses: archive/github-actions-slack@433fef9978d3adae73168bfc9c5a7ce722780231
       with:
         slack-bot-user-oauth-access-token: ${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
         slack-channel: C04K1ARMH8A

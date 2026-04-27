@@ -35,10 +35,10 @@ jobs:
       is-dev-release-branch: ${{ steps.check_created_release_pr.outputs.dev_release_branch }}
     steps: 
       - name: Checkout Base Branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - name: Checkout Pull Request
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
@@ -162,10 +162,10 @@ jobs:
       contents: read
     steps:
       - name: Checkout base repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
   
       - name: Checkout charts repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           ref: ${{ github.event.pull_request.base.ref }}
           repository: ${{ needs.determine-workflow-conditions.outputs.charts-repo }}
@@ -173,7 +173,7 @@ jobs:
           path: "charts-repo"
 
       - name: Checkout development repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           ref: ${{ github.event.pull_request.base.ref }}
           repository: ${{ github.event.pull_request.base.repo.full_name }}
@@ -181,7 +181,7 @@ jobs:
           path: "dev-repo"
       
       - name: Checkout stage repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           ref: ${{ github.event.pull_request.base.ref }}
           repository: ${{ needs.determine-workflow-conditions.outputs.stage-repo }}
@@ -303,7 +303,7 @@ jobs:
       needs.determine-merge-and-release-conditions.outputs.release-tag != ''
     steps:
     - name: Checkout base repo
-      uses: actions/checkout@v4
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
     - name: Set up Python
       id: setup-python
@@ -318,20 +318,20 @@ jobs:
       id: approve_pr
       if: |
         needs.determine-merge-and-release-conditions.outputs.should-merge == 'true'
-      uses: hmarr/auto-approve-action@v4
-      with:
-        github-token:  ${{ secrets.GITHUB_TOKEN }}
+      run: gh pr review "${PR_NUMBER}" --approve
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PR_NUMBER: ${{ github.event.number }}
 
     - name: Merge PR
       id: merge_pr
       if: |
         needs.determine-merge-and-release-conditions.outputs.should-merge == 'true'
-      uses: pascalgn/automerge-action@v0.16.2
+      run: gh pr merge "${PR_NUMBER}" --auto --squash --match-head-commit "${PR_HEAD_COMMIT}"
       env:
-        GITHUB_TOKEN:  ${{ secrets.GITHUB_TOKEN }}
-        MERGE_METHOD: squash
-        MERGE_LABELS: ""
-        MERGE_ERROR_FAIL: "true"
+        GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
+        PR_NUMBER: ${{ github.event.number }}
+        PR_HEAD_COMMIT: ${{ github.event.pull_request.head.sha }}
 
     - name: Check for PR merge
       if: |
@@ -346,7 +346,7 @@ jobs:
       id: create_release
       if: |
         needs.determine-merge-and-release-conditions.outputs.release-tag  != ''
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         tag_name: ${{ needs.determine-merge-and-release-conditions.outputs.release-tag }}
