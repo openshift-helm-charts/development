@@ -139,8 +139,8 @@ jobs:
       bot-name: ${{ secrets.BOT_NAME }}
       bot-token: ${{ secrets.BOT_TOKEN }}
 
-  approve-and-merge:
-    name: Approve and merge
+  approve:
+    name: Approve
     needs:
     - determine-workflow-conditions
     - run-tests
@@ -156,12 +156,3 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         PR_NUMBER: ${{ github.event.number }}
-
-    - name: Merge PR
-      id: merge_pr
-      run: gh pr merge "${PR_NUMBER}" --auto --squash --match-head-commit "${PR_HEAD_COMMIT}"
-      env:
-        GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
-        PR_NUMBER: ${{ github.event.number }}
-        PR_HEAD_COMMIT: ${{ github.event.pull_request.head.sha }}
-
