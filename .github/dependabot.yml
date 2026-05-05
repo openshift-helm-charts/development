@@ -9,3 +9,12 @@ updates:
     directory: "/scripts"
     schedule:
       interval: "monthly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      groups:
+        core-workflows:
+          applies-to: "version-updates"
+          patterns:
+            - "*"
