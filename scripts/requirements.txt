@@ -5,7 +5,7 @@ docker==7.1.0
 environs==15.0.1
 execnet==2.1.2
 gitdb==4.0.12
-GitPython==3.1.49
+GitPython==3.1.50
 glob2==0.7
 idna==3.13
 iniconfig==2.3.0
