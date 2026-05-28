@@ -1,16 +1,10 @@
 {
-  "version": "1.9.3",
+  "version": "1.9.4",
   "info": [
-    "Remove caching venv (#503) by @mgoerens",
-    "Fix potential UnboundLocalError in chartprreview (#505) by @mgoerens",
-    "Retry getting release asset (#507) by @mgoerens",
-    "Retry getting release asset in index update script (#508) by @mgoerens",
-    "Add a slightly longer retry (#509) by @komish",
-    "Enable smoke testing on PR label (#500) by @komish",
-    "Bump the core-scripts group in /scripts with 5 updates by @dependabot(#506) [bot]",
-    "Update and pin action versions (#510) by @komish",
-    "Disable stage and prod release PR automerging (#512) by @komish",
-    "Bump the core-scripts group in /scripts with 9 updates by @dependabot(#513) [bot]"
+    "Add github-actions ecosystem to dependabot (#511) by @komish",
+    "Bump gitpython from 3.1.49 to 3.1.50 in /scripts (#517) by @dependabot[bot]",
+    "Bump urllib3 from 2.6.3 to 2.7.0 in /scripts (#516) by @dependabot[bot]",
+    "Bump idna from 3.13 to 3.15 in /scripts (#518) by @dependabot[bot]"
   ],
   "charts": {
     "development": {
