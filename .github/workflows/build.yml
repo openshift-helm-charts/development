@@ -520,7 +520,7 @@ jobs:
       # provided a valid report.yaml
       - name: Add 'authorized-request' label to PR
         if: ${{ needs.validate-submission.outputs.validate-submission-outcome == 'success' &&
-                needs.chart-verifier.outputs.run-verifier-outcome != 'failure' &&
+                contains(fromJSON('["success", "skipped"]'), needs.chart-verifier.outputs.run-verifier-outcome) &&
                 needs.setup.outputs.run_build == 'true' }}
         run: gh pr edit "${PR_NUMBER}" --add-label "authorized-request"
         env:
