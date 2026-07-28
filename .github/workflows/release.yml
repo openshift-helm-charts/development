@@ -35,16 +35,18 @@ jobs:
       is-dev-release-branch: ${{ steps.check_created_release_pr.outputs.dev_release_branch }}
     steps: 
       - name: Checkout Base Branch
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Checkout Pull Request
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           token: ${{ secrets.BOT_TOKEN }}
           fetch-depth: 0
           path: "pr-branch"
+          # Explicit fork checkout for test execution, gated by check-contributor
+          allow-unsafe-pr-checkout: true
 
       - name: Set up Python
         id: setup-python
@@ -162,10 +164,10 @@ jobs:
       contents: read
     steps:
       - name: Checkout base repo
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
   
       - name: Checkout charts repo
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.base.ref }}
           repository: ${{ needs.determine-workflow-conditions.outputs.charts-repo }}
@@ -173,7 +175,7 @@ jobs:
           path: "charts-repo"
 
       - name: Checkout development repo
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.base.ref }}
           repository: ${{ github.event.pull_request.base.repo.full_name }}
@@ -181,7 +183,7 @@ jobs:
           path: "dev-repo"
       
       - name: Checkout stage repo
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.base.ref }}
           repository: ${{ needs.determine-workflow-conditions.outputs.stage-repo }}
@@ -303,7 +305,7 @@ jobs:
       needs.determine-merge-and-release-conditions.outputs.release-tag != ''
     steps:
     - name: Checkout base repo
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
     - name: Set up Python
       id: setup-python
