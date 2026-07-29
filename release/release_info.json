@@ -1,10 +1,13 @@
 {
-  "version": "1.9.4",
+  "version": "1.9.5",
   "info": [
-    "Add github-actions ecosystem to dependabot (#511) by @komish",
-    "Bump gitpython from 3.1.49 to 3.1.50 in /scripts (#517) by @dependabot[bot]",
-    "Bump urllib3 from 2.6.3 to 2.7.0 in /scripts (#516) by @dependabot[bot]",
-    "Bump idna from 3.13 to 3.15 in /scripts (#518) by @dependabot[bot]"
+    "Specify valid conditions for authorized-request label application (#522) by @komish",
+    "Add additional timeout message returned in helm/v4 timeout conditions (#525) by @komish",
+    "Address CI GPG chart signing key expiration (#524) by @komish",
+    "Use correct hashes for public keys in report fixtures (#526) by @komish",
+    "Bump the core-scripts group across 1 directory with 8 updates (#527) by @dependabot[bot]",
+    "Extend E2E testing logs to include links to relevant PRs and Workflow runs (#528) by @komish",
+    "Update actions/checkout to v7 (#529) by @komish"
   ],
   "charts": {
     "development": {
