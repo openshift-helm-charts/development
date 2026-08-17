@@ -1,13 +1,7 @@
 {
-  "version": "1.9.5",
+  "version": "1.9.6",
   "info": [
-    "Specify valid conditions for authorized-request label application (#522) by @komish",
-    "Add additional timeout message returned in helm/v4 timeout conditions (#525) by @komish",
-    "Address CI GPG chart signing key expiration (#524) by @komish",
-    "Use correct hashes for public keys in report fixtures (#526) by @komish",
-    "Bump the core-scripts group across 1 directory with 8 updates (#527) by @dependabot[bot]",
-    "Extend E2E testing logs to include links to relevant PRs and Workflow runs (#528) by @komish",
-    "Update actions/checkout to v7 (#529) by @komish"
+    "Bump the core-scripts group across 1 directory with 5 updates (#533) by @dependabot[bot]"
   ],
   "charts": {
     "development": {
