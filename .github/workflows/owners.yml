@@ -27,11 +27,20 @@ jobs:
         with:
           python-version: ${{ steps.setup-python.outputs.python-version }}
 
-      - uses: jitterbit/get-changed-files@v1
+      # There is no pull request on a push event, so this compares the two
+      # commits the event carries. Outputs are JSON arrays, one per status.
+      - name: Get files changed by the push
         id: filesChangedOrModified
-        with:
-          format: space-delimited
-          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          BASE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.event.after }}
+        run: |
+          ./ve1/bin/pr-files --compare \
+            --repository "${GITHUB_REPOSITORY}" \
+            --base "${BASE_SHA}" \
+            --head "${HEAD_SHA}" \
+            --format github-output
 
       - name: Printing changes made
         env:
@@ -43,20 +52,34 @@ jobs:
           echo "Modified:"
           echo "${FILES_MODIFIED}"
 
+      # Picks the OWNERS file out of each list and passes the path on, because
+      # pushowners takes one path per status, not a list.
+      #
+      # Every entry is considered, not just the first: a push routinely carries
+      # unrelated files alongside the OWNERS file, and the index of the one we
+      # want is not predictable.
       - name: Quit if owners files pushed are not
         id: check_pr_content
         env:
-          FIRST_ADDED_FILE: ${{ steps.filesChangedOrModified.outputs.added[0] }}
-          FIRST_MODIFIED_FILE: ${{ steps.filesChangedOrModified.outputs.modified[0] }}
+          FILES_ADDED: ${{ steps.filesChangedOrModified.outputs.added }}
+          FILES_MODIFIED: ${{ steps.filesChangedOrModified.outputs.modified }}
         run: |
-          SUB="/OWNERS"
-          if [ "${FIRST_ADDED_FILE}" == *"$SUB"* ] || [ "${FIRST_MODIFIED_FILE}" == *"$SUB"* ] ; then
+          set -euo pipefail
+          select_owners() {
+            jq -r 'map(select(endswith("/OWNERS"))) | first // ""' <<< "$1"
+          }
+          ADDED_OWNERS_FILE="$(select_owners "${FILES_ADDED}")"
+          MODIFIED_OWNERS_FILE="$(select_owners "${FILES_MODIFIED}")"
+
+          if [ -n "${ADDED_OWNERS_FILE}" ] || [ -n "${MODIFIED_OWNERS_FILE}" ]; then
               echo "OWNERS files have been modified or added"
               echo "collect_metrics=true" >> $GITHUB_OUTPUT
           else
               echo "OWNERS files not pushed"
               echo "collect_metrics=false" >> $GITHUB_OUTPUT
           fi
+          echo "added-owners-file=${ADDED_OWNERS_FILE}" >> $GITHUB_OUTPUT
+          echo "modified-owners-file=${MODIFIED_OWNERS_FILE}" >> $GITHUB_OUTPUT
 
       - name: Add owner metrics
         if: ${{ steps.check_pr_content.outputs.collect_metrics == 'true' }}
@@ -65,8 +88,10 @@ jobs:
           # TODO: consolidate these two keys based on environment.
           SEGMENT_WRITE_KEY: ${{ secrets.SEGMENT_WRITE_KEY }}
           SEGMENT_WRITE_TEST_KEY: ${{ secrets.SEGMENT_TEST_WRITE_KEY }}
-          ADDED: ${{ steps.filesChangedOrModified.outputs.added }}
-          MODIFIED: ${{ steps.filesChangedOrModified.outputs.modified }}
+          # A single path each, not the JSON lists: pushowners treats its
+          # --added / --modified values as file paths to read.
+          ADDED: ${{ steps.check_pr_content.outputs.added-owners-file }}
+          MODIFIED: ${{ steps.check_pr_content.outputs.modified-owners-file }}
         run: |
           if [ $GITHUB_REPOSITORY == "openshift-helm-charts/charts" ]; then
               WRITE_KEY="${SEGMENT_WRITE_KEY}"

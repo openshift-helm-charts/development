@@ -1,6 +1,7 @@
 import argparse
 import sys
 
+from pullrequest import prfiles
 from submission import submission
 from tools import gitutils
 
@@ -44,6 +45,19 @@ def main():
         gitutils.add_output("msg", "ERROR: PR contains multiple files.")
         sys.exit(20)
 
+    # modified_files and files are filled by the same API call, so the single
+    # file counted above has to be here too. Guarded anyway because the
+    # calling workflows read its status below to decide whether to run the
+    # chart name lock check, and an absent or uninterpretable status reads as
+    # "not a new file", which would skip that check.
+    if not s.files or s.files[0].status is prfiles.FileStatus.UNRECOGNISED:
+        print("The PR file is missing status information.")
+        gitutils.add_output("merge_pr", "false")
+        gitutils.add_output(
+            "msg", "ERROR: could not determine the status of the file in the PR."
+        )
+        sys.exit(40)
+
     # Parse the modified file to classify the file
     try:
         s.parse_modified_files()
@@ -68,6 +82,15 @@ def main():
     gitutils.add_output("category", s.chart.category)
     gitutils.add_output("organization", s.chart.organization)
     gitutils.add_output("chart-name", s.chart.name)
+
+    # Emit the raw status rather than a "net new" verdict: the workflows
+    # calling this disagree on whether a rename counts as new, so each applies
+    # its own policy to this value.
+    owners_file = s.files[0]
+    print(f"The file {owners_file.path} has a status of {owners_file.status.value}")
+    gitutils.add_output("file-status", owners_file.status.value)
+    if owners_file.previous_path:
+        gitutils.add_output("previous-filename", owners_file.previous_path)
 
 
 if __name__ == "__main__":

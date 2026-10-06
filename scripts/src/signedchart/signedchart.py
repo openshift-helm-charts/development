@@ -7,7 +7,7 @@ import sys
 
 sys.path.append("../")
 from owners import owners_file
-from pullrequest import prartifact
+from pullrequest import prfiles
 from reporegex import matchers
 from report import verifier_report
 
@@ -41,7 +41,7 @@ def get_verifier_flags(tar_file, owners_file, temp_dir):
 
 def is_chart_signed(api_url, report_path):
     if api_url:
-        files = prartifact.get_modified_files(api_url)
+        files = prfiles.paths(prfiles.list_pr_files(api_url))
         tgz_pattern = re.compile(
             matchers.submission_path_matcher(strict_categories=False) + r".*.tgz"
         )

@@ -8,6 +8,7 @@ contains nested classes.
 import copy
 import json
 
+from pullrequest import prfiles
 from submission import submission
 
 
@@ -19,6 +20,16 @@ class SubmissionEncoder(json.JSONEncoder):
             obj_dict["report"] = obj_dict["report"].__dict__
             obj_dict["source"] = obj_dict["source"].__dict__
             obj_dict["tarball"] = obj_dict["tarball"].__dict__
+            # PRFile is a frozen dataclass and FileStatus an Enum; neither is
+            # JSON-serializable on its own.
+            obj_dict["files"] = [
+                {
+                    "path": f.path,
+                    "status": f.status.value,
+                    "previous_path": f.previous_path,
+                }
+                for f in obj_dict["files"]
+            ]
             return obj_dict
 
         return json.JSONEncoder.default(self, o)
@@ -40,6 +51,16 @@ class SubmissionDecoder(json.JSONDecoder):
                 "report": report_obj,
                 "source": source_obj,
                 "tarball": tarball_obj,
+                "files": [
+                    prfiles.PRFile(
+                        path=f["path"],
+                        status=prfiles.FileStatus(f["status"]),
+                        previous_path=f.get("previous_path"),
+                    )
+                    # Absent when reading a submission.json written before this
+                    # field existed.
+                    for f in dct.get("files") or []
+                ],
             }
 
             new_dct = dct | to_merge_dct

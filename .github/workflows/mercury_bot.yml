@@ -48,31 +48,31 @@ jobs:
       # We know that only one file was modified at this point, and it seems
       # mergeable. Now we need to determine if that file is effectively new.
       #
-      # Being "effectively new" just influences whether or not we should be 
+      # Being "effectively new" just influences whether or not we should be
       # checking the lockfile before merging.
       #
-      # This step only checks the first file for its modification type!
+      # A rename counts as effectively new here: partners change their
+      # namespace through the partner dashboard, which reaches us as a rename
+      # of the OWNERS path.
       - name: Determine if net-new OWNERS file
         id: populate-file-mod-type
         if: ${{ steps.check_for_owners.outputs.merge_pr == 'true' }}
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const resp = await github.rest.pulls.listFiles({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number,
-            });
-            const ownersFile = resp.data[0];
-            console.log(`Modified file "${ownersFile.filename}" has a status of ${ownersFile.status}`);
-            const effectivelyNew = ownersFile.status == 'added' || ownersFile.status == 'renamed';
-            console.log(`setting output: net-new-owners-file=${effectivelyNew}`);
-            core.setOutput('net-new-owners-file', effectivelyNew);
-            core.setOutput('is-rename', ownersFile.status == 'renamed')
-            if (ownersFile.status === 'renamed') {
-              core.setOutput('previous-filename', ownersFile.previous_filename);
-            }
+        env:
+          FILE_STATUS: ${{ steps.check_for_owners.outputs.file-status }}
+          PREVIOUS_FILENAME: ${{ steps.check_for_owners.outputs.previous-filename }}
+        run: |
+          if [ "${FILE_STATUS}" = "added" ] || [ "${FILE_STATUS}" = "renamed" ]; then
+            effectively_new=true
+          else
+            effectively_new=false
+          fi
+          echo net-new-owners-file="${effectively_new}" | tee -a $GITHUB_OUTPUT
+          if [ "${FILE_STATUS}" = "renamed" ]; then
+            echo is-rename=true | tee -a $GITHUB_OUTPUT
+            echo previous-filename="${PREVIOUS_FILENAME}" | tee -a $GITHUB_OUTPUT
+          else
+            echo is-rename=false | tee -a $GITHUB_OUTPUT
+          fi
 
 
       # Only used to assert content of the OWNERS file.

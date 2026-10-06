@@ -3,7 +3,7 @@ import re
 import sys
 from argparse import ArgumentParser
 
-from pullrequest import prartifact
+from pullrequest import prfiles
 from reporegex import matchers
 from tools import gitutils
 
@@ -46,7 +46,7 @@ def extract_from_path_for_pr(pr_api_url):
         "hashicorp", "vault".
     """
 
-    modified_files = prartifact.get_modified_files(pr_api_url)
+    modified_files = prfiles.paths(prfiles.list_pr_files(pr_api_url))
     first_match = None
     modification_matcher = re.compile(
         matchers.submission_path_matcher(

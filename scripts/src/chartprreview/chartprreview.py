@@ -18,7 +18,7 @@ except ImportError:
     from yaml import Loader
 
 sys.path.append("../")
-from pullrequest import prartifact
+from pullrequest import prartifact, prfiles
 from reporegex import matchers
 from report import report_info, verifier_report
 from signedchart import signedchart
@@ -56,7 +56,7 @@ def get_modified_charts(directory, api_url):
                               hashicorp, vault, 1.4.0)
     """
     print("[INFO] Get modified charts. %s" % directory)
-    files = prartifact.get_modified_files(api_url)
+    files = prfiles.paths(prfiles.list_pr_files(api_url))
     pattern = re.compile(
         matchers.submission_path_matcher(strict_categories=False) + r"/.*"
     )

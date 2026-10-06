@@ -13,6 +13,7 @@ from collections import OrderedDict
 
 from indexfile import index
 from pullrequest import prepare_pr_comment as pr_comment
+from pullrequest import prfiles
 from reporegex import matchers
 
 file_pattern = re.compile(
@@ -165,7 +166,21 @@ def send_pull_request_metrics(write_key, g):
     repo = g.get_repo("openshift-helm-charts/charts")
     pull_requests = repo.get_pulls(state="all")
     for pr in pull_requests:
-        pr_content, type, provider, chart, version = check_and_get_pr_content(pr, repo)
+        try:
+            pr_content, type, provider, chart, version = check_and_get_pr_content(
+                pr, repo
+            )
+        except prfiles.PRFilesError as e:
+            # Metrics is the one caller where a partial answer beats no answer:
+            # this walks every pull request the repository has ever had, and
+            # nothing gates on the result. Skipping one pull request costs a
+            # single data point; letting the error propagate would abandon the
+            # entire run. Catching the base class rather than only
+            # TruncatedFileListError, because a transient 5xx on any one of
+            # several thousand requests is likelier than an oversized PR.
+            print(f"[WARNING] Skipping PR {pr.number}, cannot list its files: {e}")
+            check_rate_limit(g, False)
+            continue
         if pr_content != "not-chart":
             chart_submissions += 1
             if pr.closed_at and not pr.merged_at:
@@ -194,14 +209,6 @@ def send_pull_request_metrics(write_key, g):
         len(partners),
         len(partner_charts),
     )
-
-
-def get_pr_files(pr):
-    files = pr.get_files()
-    pr_chart_submission_files = []
-    for file in files:
-        pr_chart_submission_files.append(file.filename)
-    return pr_chart_submission_files
 
 
 def process_report_fails(message_file):
@@ -322,7 +329,7 @@ def parse_message(message, pr_number):
 
 def get_pr_content(pr):
     pr_content = "not-chart"
-    pr_chart_submission_files = get_pr_files(pr)
+    pr_chart_submission_files = prfiles.paths(prfiles.list_pr_files(pr.url))
     if len(pr_chart_submission_files) > 0:
         match = file_pattern.match(pr_chart_submission_files[0])
         if match:

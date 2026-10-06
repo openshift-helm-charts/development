@@ -35,7 +35,7 @@ from reporegex import matchers
 
 sys.path.append("../")
 from owners import checkuser
-from pullrequest import prartifact
+from pullrequest import prfiles
 from tools import gitutils
 
 VERSION_FILE = "release/release_info.json"
@@ -52,7 +52,7 @@ ERROR_IF_MATCH_FOUND = True
 
 def check_file_in_pr(api_url, pattern, error_value):
     print("[INFO] check if PR for matching files")
-    files = prartifact.get_modified_files(api_url)
+    files = prfiles.paths(prfiles.list_pr_files(api_url))
 
     for file_path in files:
         match = pattern.match(file_path)

@@ -18,8 +18,29 @@ from pathlib import Path
 import pytest
 import responses
 
+from pullrequest import prfiles
 from reporegex import matchers
 from submission import submission
+
+
+@pytest.fixture(autouse=True)
+def clear_pr_files_cache(monkeypatch):
+    """Drop the memoized PR file lists between tests.
+
+    prfiles.list_pr_files is cached on api_url, and several scenarios below
+    deliberately reuse an api_url while mocking a different file list for it.
+    Without clearing, a scenario is handed the previous one's files instead of
+    its own mock.
+
+    A token is set for the same reason the responses mock is: prfiles refuses
+    to query GitHub without one, and these tests exercise everything after the
+    request rather than the request itself.
+    """
+    prfiles.list_pr_files.cache_clear()
+    monkeypatch.setenv("BOT_TOKEN", "a-token")
+    yield
+    prfiles.list_pr_files.cache_clear()
+
 
 # Define assets that are being reused accross tests
 expected_category = "partners"
@@ -430,7 +451,10 @@ def test_submission_init(test_scenario):
     # Mock GitHub API
     responses.get(
         f"{test_scenario.api_url}/files",
-        json=[{"filename": file} for file in test_scenario.modified_files],
+        json=[
+            {"filename": file, "status": "added"}
+            for file in test_scenario.modified_files
+        ],
     )
 
     # Mock step checking out the PR locally - create tempdir with PR content

@@ -8,6 +8,25 @@ the same PR is not allowed.  (TBD: Need clarity about OWNERS file) A PR making
 changes to a chart may contain a chart and/or report.  The chart could be either
 a tarball or extracted form.
 
+## Determining which files a PR changed
+
+`scripts/src/pullrequest/prfiles.py` is the only supported way to answer this,
+whether from Python (`from pullrequest import prfiles`) or from a workflow step
+(the `pr-files` console script, installed by `.github/actions/install-ci-scripts`).
+Please do not add another: this module replaced six separate implementations that
+had drifted apart, so that the same pull request could be described three
+different ways depending on which one was asked (see issue #459).
+
+- `prfiles.list_pr_files(api_url)` returns the files a pull request touches, as
+  `PRFile` records carrying the path, GitHub's status, and the previous path for
+  a rename. `prfiles.paths(files)` reduces those to a plain list of paths.
+- `prfiles.list_compare_files(repository, base, head)` answers the same question
+  for a `push` event, where no pull request exists.
+
+Both raise `TruncatedFileListError` rather than returning a short list when
+GitHub caps the response. Callers in this repository gate merges on the answer
+and would read a partial list as complete, so this fails closed on purpose.
+
 ## Authorized Pull Request
 
 When a pull request passes all checks, the PR will get `authorized-request` as a

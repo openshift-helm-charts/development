@@ -54,23 +54,21 @@ jobs:
       # We know that only one file was modified at this point, and it seems
       # mergeable. Determine if that file was created or modified here.
       #
-      # This step only checks the first file for its modification type!
+      # Unlike mercury_bot.yml, a rename is not treated as net new: this
+      # workflow only comments for maintainers, and the namespace renaming
+      # flow that motivates it is specific to partner submissions.
       - name: Determine if net-new OWNERS file
         id: populate-file-mod-type
         if: ${{ steps.check_for_owners.outputs.merge_pr == 'true' }}
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const resp = await github.rest.pulls.listFiles({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number,
-            });
-            const ownersFile = resp.data[0];
-            console.log(`Modified file "${ownersFile.filename} has a status of ${ownersFile.status}`);
-            console.log(`setting output: net-new-owners-file=${ownersFile.status == 'added'}`);
-            core.setOutput('net-new-owners-file', ownersFile.status == 'added');
+        env:
+          FILE_STATUS: ${{ steps.check_for_owners.outputs.file-status }}
+        run: |
+          if [ "${FILE_STATUS}" = "added" ]; then
+            net_new=true
+          else
+            net_new=false
+          fi
+          echo net-new-owners-file="${net_new}" | tee -a $GITHUB_OUTPUT
 
       # Only used to assert content of the OWNERS file.
       - name: Checkout Pull Request

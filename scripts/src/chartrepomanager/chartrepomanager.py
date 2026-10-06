@@ -42,7 +42,7 @@ except ImportError:
 
 sys.path.append("../")
 from chartrepomanager import indexannotations
-from pullrequest import prartifact
+from pullrequest import prfiles
 from reporegex import matchers
 from report import report_info
 from signedchart import signedchart
@@ -78,7 +78,7 @@ def get_modified_charts(api_url):
         (str, str, str, str): category, organization, chart, and version (e.g. partner,
                               hashicorp, vault, 1.4.0)
     """
-    files = prartifact.get_modified_files(api_url)
+    files = prfiles.paths(prfiles.list_pr_files(api_url))
     pattern = re.compile(
         matchers.submission_path_matcher(strict_categories=False) + r"/.*"
     )

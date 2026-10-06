@@ -1,11 +1,19 @@
 import json
 
+from pullrequest import prfiles
 from submission import serializer, submission
 
 submission_json = """
 {
     "api_url": "https://api.github.com/repos/openshift-helm-charts/charts/pulls/1",
     "modified_files": ["charts/partners/acme/awesome/1.42.0/report.yaml"],
+    "files": [
+        {
+            "path": "charts/partners/acme/awesome/1.42.0/report.yaml",
+            "status": "added",
+            "previous_path": null
+        }
+    ],
     "chart": {
         "category": "partners",
         "organization": "acme",
@@ -50,6 +58,12 @@ def test_submission_serializer():
         s.api_url == "https://api.github.com/repos/openshift-helm-charts/charts/pulls/1"
     )
     assert "charts/partners/acme/awesome/1.42.0/report.yaml" in s.modified_files
+    assert s.files == [
+        prfiles.PRFile(
+            path="charts/partners/acme/awesome/1.42.0/report.yaml",
+            status=prfiles.FileStatus.ADDED,
+        )
+    ]
     assert s.chart.category == "partners"
     assert s.chart.organization == "acme"
     assert s.chart.name == "awesome"
@@ -69,6 +83,12 @@ def test_submission_deserializer():
     s = submission.Submission(
         api_url="https://api.github.com/repos/openshift-helm-charts/charts/pulls/1",
         modified_files=["charts/partners/acme/awesome/1.42.0/report.yaml"],
+        files=[
+            prfiles.PRFile(
+                path="charts/partners/acme/awesome/1.42.0/report.yaml",
+                status=prfiles.FileStatus.ADDED,
+            )
+        ],
         chart=submission.Chart(
             category="partners",
             organization="acme",

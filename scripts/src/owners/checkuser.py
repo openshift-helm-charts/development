@@ -23,7 +23,7 @@ except ImportError:
     from yaml import Loader
 
 sys.path.append("../")
-from pullrequest import prartifact
+from pullrequest import prfiles
 
 OWNERS_FILE = "OWNERS"
 VERSION_FILE = "release/release_info.json"
@@ -46,7 +46,7 @@ def verify_user(username):
 
 
 def check_for_restricted_file(api_url):
-    files = prartifact.get_modified_files(api_url)
+    files = prfiles.paths(prfiles.list_pr_files(api_url))
     pattern_owners = re.compile(OWNERS_FILE)
     pattern_versionfile = re.compile(VERSION_FILE)
     pattern_thisfile = re.compile(THIS_FILE)

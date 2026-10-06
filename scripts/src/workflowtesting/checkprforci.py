@@ -12,13 +12,13 @@ except ImportError:
 from tools import gitutils
 
 sys.path.append("../")
-from pullrequest import prartifact
+from pullrequest import prfiles
 
 
 def check_if_ci_only_is_modified(api_url):
     # api_url https://api.github.com/repos/<organization-name>/<repository-name>/pulls/1
 
-    files = prartifact.get_modified_files(api_url)
+    files = prfiles.paths(prfiles.list_pr_files(api_url))
     workflow_files = [
         re.compile(r".github/(workflows|actions)/.*"),
         re.compile(r"scripts/.*"),
