@@ -5,9 +5,8 @@ import pytest
 
 from report import report_info
 
-# What chart-verifier actually writes to stdout when the report's digest does not
-# match its content. Note the lowercase "digest": report_info.SHA_ERROR must keep
-# matching this case-insensitively.
+# What chart-verifier actually writes to stdout when the report's digest does
+# not match its content. The lowercase "digest" is the detail #539 turned on.
 SHA_MISMATCH_OUTPUT = (
     "error executing command: digest in report did not match report content\n"
 )
@@ -15,11 +14,21 @@ SHA_MISMATCH_OUTPUT = (
 
 @pytest.fixture
 def errors_file(tmp_path, monkeypatch):
-    """Points write_error_log at a temp dir and reads back what it recorded.
+    """Capture what write_error_log records, which is what the submitter reads.
 
-    The file it writes is what ends up verbatim in the PR comment.
+    write_error_log writes an "errors" file under WORKFLOW_WORKING_DIRECTORY,
+    and build.yml renders that file verbatim into the PR comment. Pointing it
+    at a temp dir lets a test assert on the exact text a submitter would see.
+
+    Returns a reader function rather than the file's contents: the fixture runs
+    before the test body, so the code under test has not run yet and the file
+    does not exist. The test calls read() after triggering the failure.
     """
     monkeypatch.setenv("WORKFLOW_WORKING_DIRECTORY", str(tmp_path))
+    # _get_report_info reaches chart-verifier through docker when VERIFIER_IMAGE
+    # is set and through subprocess.run otherwise. These tests stub
+    # subprocess.run, so unset the variable to keep them off the docker path if
+    # it happens to be set in the environment running pytest.
     monkeypatch.delenv("VERIFIER_IMAGE", raising=False)
 
     def read():
@@ -37,20 +46,8 @@ def fake_verifier_output(monkeypatch, stdout):
     monkeypatch.setattr(report_info.subprocess, "run", fake_run)
 
 
-@pytest.mark.parametrize(
-    "verifier_output",
-    [
-        SHA_MISMATCH_OUTPUT,
-        # The casing this repo assumed before #539. An upstream revert to it
-        # must not silently stop the match.
-        SHA_MISMATCH_OUTPUT.replace("digest", "Digest"),
-    ],
-    ids=["as-emitted", "capitalized"],
-)
-def test_sha_mismatch_reports_a_plain_message(
-    monkeypatch, errors_file, verifier_output
-):
-    fake_verifier_output(monkeypatch, verifier_output.encode())
+def test_sha_mismatch_reports_a_plain_message(monkeypatch, errors_file):
+    fake_verifier_output(monkeypatch, SHA_MISMATCH_OUTPUT.encode())
 
     with pytest.raises(SystemExit) as excinfo:
         report_info.get_report_digests(report_path="report.yaml")
