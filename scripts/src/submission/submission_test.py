@@ -21,6 +21,13 @@ import responses
 from reporegex import matchers
 from submission import submission
 
+
+@pytest.fixture(autouse=True)
+def bot_token(monkeypatch):
+    """Provide a BOT_TOKEN so the GitHub client never runs anonymously"""
+    monkeypatch.setenv("BOT_TOKEN", "test-token")
+
+
 # Define assets that are being reused accross tests
 expected_category = "partners"
 expected_organization = "acme"
@@ -422,16 +429,24 @@ scenarios_submission_init = [
 ]
 
 
+def mock_pr_files(api_url, filenames):
+    """Mock the GitHub API endpoint queried when listing the files of a PR
+
+    PyGithub rides a plain requests session and addresses api.github.com with
+    an explicit :443 port on the wire, so the mocked endpoint uses that wire
+    format.
+    """
+    pr_wire_url = api_url.replace("api.github.com", "api.github.com:443")
+    responses.get(f"{pr_wire_url}/files", json=[{"filename": f} for f in filenames])
+
+
 @pytest.mark.parametrize("test_scenario", scenarios_submission_init)
 @responses.activate
 def test_submission_init(test_scenario):
     """Test the instantiation of a Submission in different scenarios"""
 
     # Mock GitHub API
-    responses.get(
-        f"{test_scenario.api_url}/files",
-        json=[{"filename": file} for file in test_scenario.modified_files],
-    )
+    mock_pr_files(test_scenario.api_url, test_scenario.modified_files)
 
     # Mock step checking out the PR locally - create tempdir with PR content
     with tempfile.TemporaryDirectory() as prbanch_temp_dir:
@@ -462,15 +477,18 @@ def test_submission_not_exist():
     )
 
     responses.get(
-        f"{api_url_doesnt_exist}/files",
-        json={
-            "message": "Not Found",
-            "documentation_url": "https://docs.github.com/rest/pulls/pulls#list-pull-requests-files",
-        },
+        "https://api.github.com:443/repos/openshift-helm-charts/charts"
+        "/pulls/9999/files",
+        json={"message": "Not Found"},
+        status=404,
     )
 
-    with pytest.raises(submission.SubmissionError):
+    with pytest.raises(submission.SubmissionError) as exc_info:
         submission.Submission(api_url=api_url_doesnt_exist)
+
+    # The API error message must survive the SystemExit -> SubmissionError
+    # conversion: it becomes the PR comment message
+    assert "getting pr files" in str(exc_info.value)
 
 
 @dataclass

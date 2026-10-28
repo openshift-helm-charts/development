@@ -1,54 +1,91 @@
 import os
+import re
 import sys
 
 import requests
+from github import Auth, Github
+from github.File import File
+from github.GithubException import GithubException
+from github.PullRequest import PullRequest
 
-pr_files = []
 pr_labels = []
 xRateLimit = "X-RateLimit-Limit"
 xRateRemain = "X-RateLimit-Remaining"
 
+pr_api_url_pattern = re.compile(
+    r"^https://api\.github\.com/repos/([^/]+/[^/]+)/pulls/(\d+)$"
+)
+
+
+def get_pull_request(api_url: str) -> PullRequest:
+    """Resolve the API URL of a PR to a PyGithub PullRequest object
+
+    Args:
+        api_url (str): URL of the GitHub PR, e.g.
+            https://api.github.com/repos/<owner>/<repo>/pulls/<number>
+
+    Returns:
+        PullRequest: PyGithub object representing the PR
+
+    Raises:
+        ValueError: if api_url is not a pull request API URL
+        SystemExit: with an error message, if BOT_TOKEN is not set
+    """
+    bot_token = os.environ.get("BOT_TOKEN")
+    if not bot_token:
+        sys.exit("[ERROR] BOT_TOKEN environment variable is not set")
+    match = pr_api_url_pattern.match(api_url)
+    if not match:
+        raise ValueError(f"Not a pull request API URL: {api_url}")
+    repository, pr_number = match.groups()
+    return (
+        # lazy=True resolves the PR from the URL alone, so listing its files
+        # costs a single API request
+        Github(auth=Auth.Token(bot_token), per_page=100, lazy=True)
+        .get_repo(repository)
+        .get_pull(int(pr_number))
+    )
+
+
+def get_pr_files(pr: PullRequest) -> list[File]:
+    """Return the list of files changed by the PR, with each file's status
+
+    This is the single shared way to list the files of a PR. Every file the PR
+    touches is returned (added, modified, removed, renamed), so callers can
+    distinguish how the PR touches each file.
+
+    Args:
+        pr (PullRequest): PyGithub object representing the PR
+
+    Returns:
+        list[File]: PyGithub File objects, exposing .filename and .status
+    """
+    return list(pr.get_files())
+
 
 def get_modified_files(api_url):
-    """Populates and returns the list of files modified by this the PR
+    """Returns the list of files modified by the PR
 
     Args:
         api_url (str): URL of the GitHub PR
 
     Returns:
         list[str]: List of modified files
+
+    Raises:
+        SystemExit: with an error message, if the files cannot be listed
     """
-    if not pr_files:
-        page_number = 1
-        max_page_size, page_size = 100, 100
-        headers = {
-            "Accept": "application/vnd.github.v3+json",
-            "Authorization": f'Bearer {os.environ.get("BOT_TOKEN")}',
-        }
-        files_api_url = f"{api_url}/files"
-
-        while page_size == max_page_size:
-            files_api_query = f"{files_api_url}?per_page={page_size}&page={page_number}"
-            print(f"[INFO] Query files : {files_api_query}")
-            r = requests.get(files_api_query, headers=headers)
-            files = r.json()
-            page_size = len(files)
-            page_number += 1
-
-            if xRateLimit in r.headers:
-                print(f"[DEBUG] {xRateLimit} : {r.headers[xRateLimit]}")
-            if xRateRemain in r.headers:
-                print(f"[DEBUG] {xRateRemain}  : {r.headers[xRateRemain]}")
-
-            if "message" in files:
-                print(f'[ERROR] getting pr files: {files["message"]}')
-                sys.exit(1)
-            else:
-                for file in files:
-                    if "filename" in file:
-                        pr_files.append(file["filename"])
-
-    return pr_files
+    try:
+        return [
+            file.filename
+            for file in get_pr_files(get_pull_request(api_url))
+            if file.filename
+        ]
+    except (GithubException, ValueError) as e:
+        # The message is carried in the exit status (SystemExit.code), so
+        # callers that catch it can surface it (submission.py puts it in the
+        # PR comment); uncaught, the interpreter prints it and exits 1
+        sys.exit(f"[ERROR] getting pr files: {e}")
 
 
 def get_labels(api_url):
