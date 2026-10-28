@@ -1,7 +1,11 @@
 {
-  "version": "1.9.6",
+  "version": "1.9.7",
   "info": [
-    "Bump the core-scripts group across 1 directory with 5 updates (#533) by @dependabot[bot]"
+    "Bump the core-scripts group in /scripts with 6 updates (#537) by @dependabot[bot]",
+    "Replace turnstyle with native GitHub concurrency for release job (#538) by @aycohen-ai",
+    "Bump the core-scripts group in /scripts with 9 updates (#542) by @dependabot[bot]",
+    "Stop showing JSONDecodeError in the PR comment (#540) by @aycohen-ai",
+    "Bump gitpython from 3.1.62 to 3.2.1 in /scripts (#544) by @dependabot[bot]"
   ],
   "charts": {
     "development": {
