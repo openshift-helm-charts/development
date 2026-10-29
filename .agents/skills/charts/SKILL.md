@@ -1,6 +1,6 @@
 ---
 name: charts
-description: Develop, test, and release the chart submission workflows and scripts for the openshift-helm-charts/charts product repository, working in the openshift-helm-charts/development repository. Use when the user asks to change a GitHub workflow, the Python automation under scripts/, the release process (release_info.json), or to submit or test a non-chart pull request against the development repository.
+description: Develop, test, and release the chart submission workflows and scripts for the openshift-helm-charts/charts product repository, working in the openshift-helm-charts/development repository. Use when the user mentions a GitHub workflow under .github/workflows (build.yml, test.yml, behave.yml, nightly_test.yml), the Python automation under scripts/src, ruff or black, the behave BDD tests or the sandbox repository, an OWNERS approver, or the release process (release_info.json merges/replaces/ignores).
 license: Apache-2.0
 ---
 
@@ -57,8 +57,15 @@ submitted. The bot account, cluster, and secrets setup is described in
 
 ### 5. Submit the pull request
 
-Open a PR against `openshift-helm-charts/development` containing only the
-non-chart change. Never include chart content (`charts/`) in the same PR.
+Before submitting, confirm the user is listed under `approver` in the
+repository's `OWNERS` file — CI rejects workflow, script, and test PRs from
+anyone else. Open a PR against `openshift-helm-charts/development` containing
+only the non-chart change. Never include chart content (`charts/`) in the same
+PR.
+
+**Done when** the PR contains only the non-chart change, the `python-style`
+and `python-test` checks pass, and the BDD tests against the sandbox
+repository triggered by the PR are green.
 
 ### 6. Release
 
