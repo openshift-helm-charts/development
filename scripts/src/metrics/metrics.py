@@ -12,6 +12,7 @@ sys.path.append("../")
 from collections import OrderedDict
 
 from indexfile import index
+from pullrequest import prartifact
 from pullrequest import prepare_pr_comment as pr_comment
 from reporegex import matchers
 
@@ -196,14 +197,6 @@ def send_pull_request_metrics(write_key, g):
     )
 
 
-def get_pr_files(pr):
-    files = pr.get_files()
-    pr_chart_submission_files = []
-    for file in files:
-        pr_chart_submission_files.append(file.filename)
-    return pr_chart_submission_files
-
-
 def process_report_fails(message_file):
     fails = "0"
     num_error_messages = 0
@@ -322,7 +315,7 @@ def parse_message(message, pr_number):
 
 def get_pr_content(pr):
     pr_content = "not-chart"
-    pr_chart_submission_files = get_pr_files(pr)
+    pr_chart_submission_files = [file.filename for file in prartifact.get_pr_files(pr)]
     if len(pr_chart_submission_files) > 0:
         match = file_pattern.match(pr_chart_submission_files[0])
         if match:

@@ -14,12 +14,10 @@ except ImportError:
 
 
 from owners import owners_file
+from pullrequest import prartifact
 from reporegex import matchers
 from report import verifier_report
-from tools import gitutils
 
-xRateLimit = "X-RateLimit-Limit"
-xRateRemain = "X-RateLimit-Remaining"
 REQUEST_TIMEOUT = 10
 
 
@@ -261,39 +259,11 @@ class Submission:
     def _get_modified_files(self):
         """Query the GitHub API in order to retrieve the list of files that are added / modified by
         this PR"""
-        page_number = 1
-        max_page_size, page_size = 100, 100
-        files_api_url = re.sub(r"^https://api\.github\.com/", "", self.api_url)
-
-        while page_size == max_page_size:
-            files_api_query = (
-                f"{files_api_url}/files?per_page={page_size}&page={page_number}"
-            )
-            print(f"[INFO] Query files : {files_api_query}")
-
-            try:
-                r = gitutils.github_api(
-                    "get", files_api_query, os.environ.get("BOT_TOKEN")
-                )
-            except SystemExit as e:
-                raise SubmissionError(e) from e
-
-            files = r.json()
-            page_size = len(files)
-            page_number += 1
-
-            if xRateLimit in r.headers:
-                print(f"[DEBUG] {xRateLimit} : {r.headers[xRateLimit]}")
-            if xRateRemain in r.headers:
-                print(f"[DEBUG] {xRateRemain}  : {r.headers[xRateRemain]}")
-
-            if "message" in files:
-                msg = f'[ERROR] getting pr files: {files["message"]}'
-                raise SubmissionError(msg)
-            else:
-                for file in files:
-                    if "filename" in file:
-                        self.modified_files.append(file["filename"])
+        try:
+            self.modified_files = prartifact.get_modified_files(self.api_url)
+        except SystemExit as e:
+            # e.code carries the error message from prartifact
+            raise SubmissionError(e.code) from e
 
     def parse_modified_files(self, repo_path: str = ""):
         """Classify the list of modified files.
