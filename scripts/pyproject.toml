@@ -1,3 +1,63 @@
+[project]
+name = "rh-chart-repo-manager"
+version = "0.1.0"
+description = "Chart Repo Manager"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "analytics-python",
+    "docker",
+    "environs",
+    "GitPython",
+    "PyGithub>=2.9",
+    "PyYAML",
+    "requests",
+    "semantic-version",
+    "semver",
+    "urllib3",
+]
+
+[project.urls]
+Homepage = "https://github.com/openshift-helm-charts/charts"
+"Bug Tracker" = "https://github.com/openshift-helm-charts/charts/issues"
+
+[dependency-groups]
+test = [
+    "behave",
+    "pytest",
+    "responses",
+    "retrying",
+]
+
+[project.scripts]
+chart-repo-manager = "chartrepomanager.chartrepomanager:main"
+chart-pr-review = "chartprreview.chartprreview:main"
+validate-submission = "submission.validate:main"
+pr-comment = "pullrequest.prepare_pr_comment:main"
+sa-for-chart-testing = "saforcharttesting.saforcharttesting:main"
+check-auto-merge = "checkautomerge.checkautomerge:main"
+check-pr-for-ci = "workflowtesting.checkprforci:main"
+release-checker = "release.releasechecker:main"
+releaser = "release.releaser:main"
+check-user = "owners.checkuser:main"
+metrics = "metrics.metrics:main"
+get-verify-params = "report.get_verify_params:main"
+pushowners = "metrics.pushowners:main"
+update-index = "updateindex.updateindex:main"
+user-is-repo-owner = "owners.user_is_repo_owner:main"
+generate-chart-locks = "packagemapping.generatelocks:main"
+extract-metadata-from-pr = "pullrequest.metadata:main"
+assert-redhat-owners-file-meta = "owners.redhat_metadata:main"
+check-for-owners = "pullrequest.check_for_owners:main"
+
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

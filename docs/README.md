@@ -555,5 +555,5 @@ documentation][partner-acceleration-desk].
 [encyrpted-secret]: https://docs.github.com/en/actions/reference/encrypted-secrets
 [gh-cli-pr]: https://cli.github.com/manual/gh_pr_create
 [partner-acceleration-desk]: https://access.redhat.com/articles/6463941
-[new-issue]: https://github.com/openshift-helm-charts/repo/issues/new/choose
+[new-issue]: https://github.com/openshift-helm-charts/charts/issues/new/choose
 [ascii-armor]: https://www.redhat.com/sysadmin/creating-gpg-keypairs
