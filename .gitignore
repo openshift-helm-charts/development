@@ -35,6 +35,8 @@ MANIFEST
 
 # Virtual Envs
 venv.*/
+# uv builds this locally; `venv.*/` above does not match it.
+.venv/
 
 # For Pyenv users
 .python-version

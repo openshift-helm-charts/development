@@ -60,12 +60,13 @@ jobs:
           ref: ${{ env.TRUSTED_REF }}
 
       - name: Set up Python
+        id: setup-python
         uses: ./.github/actions/setup-python
 
       - name: Install Python CI tooling
-        working-directory: scripts
-        run: |
-          make venv.tools
+        uses: ./.github/actions/install-ci-scripts
+        with:
+          python-version: ${{ steps.setup-python.outputs.python-version }}
 
       - name: Gather Metadata
         id: gather-metadata
@@ -73,7 +74,7 @@ jobs:
           API_URL: ${{ github.event.pull_request._links.self.href }}
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
-          ./scripts/venv.tools/bin/extract-metadata-from-pr \
+          ./ve1/bin/extract-metadata-from-pr \
             --emit-to-github-output \
             "${API_URL}"
   ensure-prefix-in-path:
@@ -100,11 +101,12 @@ jobs:
         with:
           ref: ${{ env.TRUSTED_REF }}
       - name: Set up Python
+        id: setup-python
         uses: ./.github/actions/setup-python
       - name: Install Python CI tooling
-        working-directory: scripts
-        run: |
-          make venv.tools
+        uses: ./.github/actions/install-ci-scripts
+        with:
+          python-version: ${{ steps.setup-python.outputs.python-version }}
 
       # Only used to assert content of the OWNERS file.
       - name: Checkout Pull Request
@@ -126,7 +128,7 @@ jobs:
           ORGANIZATION: ${{ needs.gather-metadata.outputs.organization }}
           CHARTNAME: ${{ needs.gather-metadata.outputs.chartname }}
         run: |
-          ../scripts/venv.tools/bin/assert-redhat-owners-file-meta \
+          ../ve1/bin/assert-redhat-owners-file-meta \
             "${CATEGORY}" \
             "${ORGANIZATION}" \
             "${CHARTNAME}"

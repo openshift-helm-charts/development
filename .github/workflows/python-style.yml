@@ -18,7 +18,7 @@ jobs:
       uses: ./.github/actions/setup-python
     - name: Install style tooling
       working-directory: scripts
-      run: make venv.codestyle
+      run: make install.lint
     - name: Run formatter
       working-directory: scripts
       run: make ci.format

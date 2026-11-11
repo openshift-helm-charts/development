@@ -3,7 +3,7 @@ name = "rh-chart-repo-manager"
 version = "0.1.0"
 description = "Chart Repo Manager"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: Apache Software License",
@@ -32,6 +32,10 @@ test = [
     "pytest",
     "responses",
     "retrying",
+]
+lint = [
+    "black",
+    "ruff",
 ]
 
 [project.scripts]

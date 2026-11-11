@@ -12,7 +12,16 @@ outputs:
 runs:
   using: composite
   steps:
-  - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
-    id: setup-python
+  - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
     with:
-      python-version: '3.10'
+      version: "0.13.7"
+      # Must be explicit: the default "auto" disables caching on
+      # pull_request_target, which several workflows here use.
+      enable-cache: true
+      cache-dependency-glob: "scripts/uv.lock"
+  - shell: bash
+    id: setup-python
+    run: |
+      # Single source of truth for the project's Python version.
+      uv python install 3.12
+      echo "python-version=3.12" >> "$GITHUB_OUTPUT"

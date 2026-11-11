@@ -7,7 +7,7 @@ on:
     - 'scripts/src/submission/*'
     - 'scripts/src/report/*'
     - 'scripts/src/pullrequest/*'
-    - 'scripts/requirements.txt'
+    - 'scripts/uv.lock'
 
 jobs:
   enforce:
@@ -20,6 +20,9 @@ jobs:
     - name: Set up Python
       id: setup-python
       uses: ./.github/actions/setup-python
+    - name: Verify lockfile is current
+      working-directory: scripts
+      run: uv lock --check
     - name: Install CI scripts
       uses: ./.github/actions/install-ci-scripts
       with:

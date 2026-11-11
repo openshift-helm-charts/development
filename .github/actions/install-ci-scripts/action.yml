@@ -15,9 +15,10 @@ runs:
   - name: Setup venv
     shell: bash
     working-directory: ${{ inputs.working-directory }}
+    env:
+      # Build the venv where every existing workflow already looks for it, so
+      # that the `ve1/bin/<command>` call sites need no changes.
+      UV_PROJECT_ENVIRONMENT: ${{ github.workspace }}/ve1
     run: |
-      # set up python
-      python3 -m venv ve1
       cd scripts
-      ../ve1/bin/pip3 install -r requirements.txt
-      ../ve1/bin/pip3 install .
+      make install
