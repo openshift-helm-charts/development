@@ -8,6 +8,7 @@ approvers:
 - OchiengEd
 - openshift-helm-charts-bot
 - acornett21
+- aycohen-ai
 
 reviewers:
 - komish
@@ -16,3 +17,4 @@ reviewers:
 - mgoerens
 - OchiengEd
 - acornett21
+- aycohen-ai
