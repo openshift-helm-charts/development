@@ -17,8 +17,10 @@ runs:
     working-directory: ${{ inputs.working-directory }}
     env:
       # Build the venv where every existing workflow already looks for it, so
-      # that the `ve1/bin/<command>` call sites need no changes.
-      UV_PROJECT_ENVIRONMENT: ${{ github.workspace }}/ve1
+      # that the `ve1/bin/<command>` call sites need no changes. That is
+      # `ve1` inside the working-directory (release.yml passes ./pr-branch),
+      # as an absolute path because uv would otherwise resolve it from scripts/.
+      UV_PROJECT_ENVIRONMENT: ${{ github.workspace }}/${{ inputs.working-directory }}/ve1
     run: |
       cd scripts
       make install
