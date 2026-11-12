@@ -1,6 +1,6 @@
 version: 2
 updates:
-  - package-ecosystem: pip
+  - package-ecosystem: uv
     groups:
       core-scripts:
         applies-to: "version-updates"
@@ -13,8 +13,8 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
-      groups:
-        core-workflows:
-          applies-to: "version-updates"
-          patterns:
-            - "*"
+    groups:
+      core-workflows:
+        applies-to: "version-updates"
+        patterns:
+          - "*"

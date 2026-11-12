@@ -12,7 +12,26 @@ outputs:
 runs:
   using: composite
   steps:
-  - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
-    id: setup-python
+  - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
     with:
-      python-version: '3.10'
+      version: "0.13.7"
+      # enable-cache is deliberately left at its default of "auto", which
+      # disables the cache on pull_request_target, workflow_run, releases and
+      # tag pushes. Several workflows here check out fork content in a
+      # pull_request_target job (behave.yml runs PR-supplied step code), and a
+      # cache saved from such a job is written to the base branch scope that
+      # every other workflow restores from. Forcing it on would let a fork PR
+      # poison that cache.
+      cache-dependency-glob: "scripts/uv.lock"
+  - shell: bash
+    id: setup-python
+    env:
+      # Single source of truth for the project's Python version.
+      PYTHON_VERSION: "3.12"
+    run: |
+      uv python install "${PYTHON_VERSION}"
+      # Pin every later uv invocation in the job to this interpreter.
+      # .python-version is gitignored, so uv would otherwise be free to pick
+      # any interpreter satisfying requires-python (>=3.12).
+      echo "UV_PYTHON=${PYTHON_VERSION}" >> "$GITHUB_ENV"
+      echo "python-version=${PYTHON_VERSION}" >> "$GITHUB_OUTPUT"

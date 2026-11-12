@@ -15,9 +15,15 @@ runs:
   - name: Setup venv
     shell: bash
     working-directory: ${{ inputs.working-directory }}
+    env:
+      # Build the venv where every existing workflow already looks for it, so
+      # that the `ve1/bin/<command>` call sites need no changes. That is
+      # `ve1` inside the working-directory (release.yml passes ./pr-branch),
+      # as an absolute path because uv would otherwise resolve it from scripts/.
+      UV_PROJECT_ENVIRONMENT: ${{ github.workspace }}/${{ inputs.working-directory }}/ve1
+      # Honour the version setup-python reported, rather than letting uv pick
+      # any interpreter that satisfies requires-python.
+      UV_PYTHON: ${{ inputs.python-version }}
     run: |
-      # set up python
-      python3 -m venv ve1
       cd scripts
-      ../ve1/bin/pip3 install -r requirements.txt
-      ../ve1/bin/pip3 install .
+      make install
