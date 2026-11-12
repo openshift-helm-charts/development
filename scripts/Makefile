@@ -8,6 +8,14 @@ VENV_CODESTYLE_BIN = $(VENV_CODESTYLE)/bin
 VENV_TOOLS = venv.tools
 VENV_TOOLS_BIN = $(VENV_TOOLS)/bin
 
+# The virtualenv containing the uv-managed lint tools. It is deliberately NOT
+# the project environment: `uv sync` is exact, so syncing --only-group lint
+# into the shared env would prune the project and its test dependencies back
+# out of it, breaking an env that `make install` had just populated.
+# Matched by the `venv.*/` rule in .gitignore.
+VENV_LINT ?= venv.lint
+UV_LINT_ENV = UV_PROJECT_ENVIRONMENT=$(VENV_LINT)
+
 # This is what we pass to git ls-files.
 LS_FILES_INPUT_STR ?= 'src/*.py'
 
@@ -26,7 +34,7 @@ install:
 # This reproduces what venv.codestyle gave us: a minimal, isolated lint env.
 .PHONY: install.lint
 install.lint:
-	uv sync --locked --only-group lint
+	$(UV_LINT_ENV) uv sync --locked --only-group lint
 
 # The same as format, but will throw a non-zero exit code
 # if the formatter had to make changes.
@@ -52,13 +60,13 @@ venv.codestyle.always-reinstall:
 
 .PHONY: format
 format: install.lint
-	uv run --only-group lint black \
+	$(UV_LINT_ENV) uv run --only-group lint black \
 		--verbose \
 		$$(git ls-files $(LS_FILES_INPUT_STR))
 
 .PHONY: lint
 lint: install.lint
-	uv run --only-group lint ruff \
+	$(UV_LINT_ENV) uv run --only-group lint ruff \
 		check \
 		$$(git ls-files $(LS_FILES_INPUT_STR))
 

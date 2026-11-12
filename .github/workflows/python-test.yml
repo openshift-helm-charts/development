@@ -8,6 +8,7 @@ on:
     - 'scripts/src/report/*'
     - 'scripts/src/pullrequest/*'
     - 'scripts/uv.lock'
+    - 'scripts/pyproject.toml'
 
 jobs:
   enforce:
