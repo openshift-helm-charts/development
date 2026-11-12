@@ -1,6 +1,12 @@
 name: Install our CI scripts
 description: |
   Handles installation and caching/restore of the CI scripts in a virtualenv.
+
+  Supports both dependency layouts during the uv migration. The pull_request_target
+  workflows run this action from the base branch against a checkout of the pull
+  request, so the files it installs from are the PR's, not the base branch's. It
+  therefore selects the toolchain from the files actually present rather than
+  assuming the base branch's layout.
 inputs:
   working-directory:
     description: Basedir in which to save / restore cache and install venv.
@@ -12,7 +18,48 @@ inputs:
 runs:
   using: composite
   steps:
-  - name: Setup venv
+  - name: Detect dependency layout
+    id: detect
+    shell: bash
+    working-directory: ${{ inputs.working-directory }}
+    run: |
+      if [ -f scripts/uv.lock ]; then
+        echo "manager=uv" >> "$GITHUB_OUTPUT"
+      else
+        echo "manager=pip" >> "$GITHUB_OUTPUT"
+      fi
+
+  # Only needed when the base branch's setup-python is still the pip one;
+  # once it installs uv itself this is a no-op re-install.
+  - name: Install uv
+    if: steps.detect.outputs.manager == 'uv'
+    uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+    with:
+      version: "0.13.7"
+      # pull_request_target jobs share the base repo's cache scope and run PR
+      # build code, so a PR could poison a cache that trusted runs restore.
+      enable-cache: false
+
+  - name: Setup venv (uv)
+    if: steps.detect.outputs.manager == 'uv'
+    shell: bash
+    working-directory: ${{ inputs.working-directory }}
+    env:
+      # Build the venv where every existing workflow already looks for it, so
+      # that the `ve1/bin/<command>` call sites need no changes.
+      UV_PROJECT_ENVIRONMENT: ${{ github.workspace }}/${{ inputs.working-directory }}/ve1
+    run: |
+      cd scripts
+      # Not `make install`: the target only exists in the migrated Makefile,
+      # and uv.lock is the thing that says the lock is authoritative.
+      # The interpreter is left to uv, which resolves requires-python from
+      # pyproject.toml and downloads it if the runner has nothing suitable.
+      # Do not pass inputs.python-version: the base branch's setup-python can
+      # still provide 3.10 while the PR's pyproject requires a newer Python.
+      uv sync --locked --group test
+
+  - name: Setup venv (pip)
+    if: steps.detect.outputs.manager == 'pip'
     shell: bash
     working-directory: ${{ inputs.working-directory }}
     run: |
