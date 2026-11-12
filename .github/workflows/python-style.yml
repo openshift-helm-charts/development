@@ -5,6 +5,12 @@ on:
     paths:
     # Only trigger on core script changes
     - 'scripts/**.py'
+    # The lint tooling itself: the targets that run black and ruff, and the
+    # files that pin them. A change to any of these can change the outcome of
+    # a style run just as much as a change to the sources.
+    - 'scripts/Makefile'
+    - 'scripts/pyproject.toml'
+    - 'scripts/uv.lock'
 
 jobs:
   enforce:
