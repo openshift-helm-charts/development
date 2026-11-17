@@ -27,6 +27,10 @@ Homepage = "https://github.com/openshift-helm-charts/charts"
 "Bug Tracker" = "https://github.com/openshift-helm-charts/charts/issues"
 
 [dependency-groups]
+lint = [
+    "black",
+    "ruff",
+]
 test = [
     "behave",
     "pytest",
