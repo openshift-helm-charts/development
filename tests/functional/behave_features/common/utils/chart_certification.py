@@ -836,8 +836,9 @@ class ChartCertificationE2ETestSingle(ChartCertificationE2ETest):
 
                     self.temp_repo.git.add(report_path)
 
+        chart_names = ", ".join(f"{chart.chart_name}-{chart.chart_version}" for chart in self.test_charts)
         self.temp_repo.git.commit(
-            "-m", f"Add {self.secrets.vendor} {self.test_charts} report"
+            "-m", f"Add {self.secrets.vendor} {chart_names} report"
         )
         self.temp_repo.git.push(
             f"https://x-access-token:{self.secrets.bot_token}@github.com/{self.secrets.test_repo}",
@@ -880,8 +881,9 @@ class ChartCertificationE2ETestSingle(ChartCertificationE2ETest):
                     f"YTD: chart_type {chart.chart_type} is yet to be supported"
                 )
 
+        chart_names = ", ".join(f"{chart.chart_name}-{chart.chart_version}" for chart in self.test_charts)
         self.temp_repo.git.commit(
-            "-m", f"Adding {self.secrets.vendor} {self.test_charts} charts"
+            "-m", f"Adding {self.secrets.vendor} {chart_names} charts"
         )
 
         self.temp_repo.git.push(
