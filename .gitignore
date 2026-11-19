@@ -35,6 +35,7 @@ MANIFEST
 
 # Virtual Envs
 venv.*/
+.venv/
 
 # For Pyenv users
 .python-version

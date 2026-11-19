@@ -8,7 +8,7 @@ Python source for the CI scripts invoked by the workflows in [`.github/`](../../
 
 ## Setup and validation
 
-Everything runs through `scripts/Makefile` using two virtualenvs in `scripts/`: `venv.codestyle` (Black and Ruff, used by `format`/`lint`) and `venv.tools` (the CI scripts package, built from `scripts/requirements.txt` plus the package itself). Run these commands from `scripts/`:
+Everything runs through `scripts/Makefile` using two virtualenvs in `scripts/`: `venv.codestyle` (Black and Ruff, used by `format`/`lint`) and `venv.tools` (the CI scripts package and its test dependencies), both installed with uv from `scripts/uv.lock`. Run these commands from `scripts/`:
 
 ```bash
 make venv.tools # Installs CI scripts to venv.tools. Append .always-reinstall after making changes.

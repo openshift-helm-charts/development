@@ -1,12 +1,9 @@
-PY_BIN ?= python3
-
 # The virtualenv containing code style tools.
 VENV_CODESTYLE = venv.codestyle
 VENV_CODESTYLE_BIN = $(VENV_CODESTYLE)/bin
 
 # The virtualenv containing our CI scripts
 VENV_TOOLS = venv.tools
-VENV_TOOLS_BIN = $(VENV_TOOLS)/bin
 
 # This is what we pass to git ls-files.
 LS_FILES_INPUT_STR ?= 'src/*.py'
@@ -27,10 +24,7 @@ venv.codestyle:
 # Useful for development cases.
 .PHONY: venv.codestyle.always-reinstall
 venv.codestyle.always-reinstall:
-	$(PY_BIN) -m venv $(VENV_CODESTYLE)
-	./$(VENV_CODESTYLE_BIN)/pip install --upgrade \
-		black \
-		ruff
+	UV_PROJECT_ENVIRONMENT=$(VENV_CODESTYLE) uv sync --locked --only-group lint
 
 .PHONY: format
 format: venv.codestyle
@@ -51,6 +45,4 @@ venv.tools:
 # Useful for development cases.
 .PHONY: venv.tools.always-reinstall
 venv.tools.always-reinstall:
-	$(PY_BIN) -m venv $(VENV_TOOLS)
-	./$(VENV_TOOLS_BIN)/pip install -r requirements.txt
-	./$(VENV_TOOLS_BIN)/pip install .
+	UV_PROJECT_ENVIRONMENT=$(VENV_TOOLS) uv sync --locked --group test
